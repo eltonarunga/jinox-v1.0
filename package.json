@@ -1,13 +1,14 @@
 {
   "name": "jinox-ai-prototype",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "JinoX AI — full-stack prototype (Next.js + Supabase) for the multimodal oral & craniofacial health platform, Kenya pilot.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

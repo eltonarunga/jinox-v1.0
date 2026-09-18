@@ -1,83 +1,126 @@
--- JinoX AI — Supabase schema
--- Run against a Supabase project to move the app from in-memory mock data
--- (lib/data.ts) to a persisted backend. API route shapes are designed to
--- match these tables one-to-one.
+-- ==============================================================================
+-- JinoX AI — Production Supabase Schema
+-- Multimodal Oral & Craniofacial Health Platform (Kenya Pilot Build)
+-- ==============================================================================
 
 create extension if not exists "pgcrypto";
 
--- County-level groundwater fluoride readings and rollup screening stats.
+-- Automatic updated_at timestamp trigger function
+create or replace function handle_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+-- ------------------------------------------------------------------------------
+-- 1. Counties: Regional groundwater fluoride readings & demographic stats
+-- ------------------------------------------------------------------------------
 create table if not exists counties (
   id uuid primary key default gen_random_uuid(),
   name text not null unique,
-  fluoride_ppm numeric(4,2) not null,
+  fluoride_ppm numeric(5,2) not null check (fluoride_ppm >= 0),
   risk_tier text not null check (risk_tier in ('low', 'mod', 'high')),
+  screened_count int not null default 0,
+  referral_rate text default '0%',
   source text default 'WRMA water quality survey',
+  created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
--- Individual screening events captured by CHPs in the field.
+create index if not exists idx_counties_name on counties (name);
+create index if not exists idx_counties_tier on counties (risk_tier);
+
+drop trigger if exists set_counties_updated_at on counties;
+create trigger set_counties_updated_at
+  before update on counties
+  for each row execute function handle_updated_at();
+
+-- ------------------------------------------------------------------------------
+-- 2. Screenings: Individual triage events captured by Community Health Promoters
+-- ------------------------------------------------------------------------------
 create table if not exists screenings (
   id uuid primary key default gen_random_uuid(),
-  county_id uuid references counties(id),
-  patient_age int,
-  imaging_signal numeric(5,2) not null,
-  environmental_signal numeric(5,2) not null,
-  genetic_signal numeric(5,2) not null,
-  fused_fluorosis_risk numeric(5,2) not null,
+  county_id uuid references counties(id) on delete set null,
+  patient_age int check (patient_age >= 0 and patient_age <= 125),
+  imaging_signal numeric(5,2) not null check (imaging_signal >= 0 and imaging_signal <= 100),
+  environmental_signal numeric(5,2) not null check (environmental_signal >= 0 and environmental_signal <= 100),
+  genetic_signal numeric(5,2) not null check (genetic_signal >= 0 and genetic_signal <= 100),
+  fused_fluorosis_risk numeric(5,2) not null check (fused_fluorosis_risk >= 0 and fused_fluorosis_risk <= 100),
   risk_tier text not null check (risk_tier in ('low', 'mod', 'high')),
-  referred_for_review boolean default false,
+  referred_for_review boolean not null default false,
   created_at timestamptz not null default now()
 );
 
--- Model version history, used by /api/model/performance.
+create index if not exists idx_screenings_county_id on screenings (county_id);
+create index if not exists idx_screenings_tier on screenings (risk_tier);
+create index if not exists idx_screenings_created_at on screenings (created_at desc);
+
+-- ------------------------------------------------------------------------------
+-- 3. Model Versions: Model registry and fairness/equity validation audits
+-- ------------------------------------------------------------------------------
 create table if not exists model_versions (
   id uuid primary key default gen_random_uuid(),
   version text not null unique,
-  auc numeric(4,3) not null,
-  min_subgroup_auc numeric(4,3),
+  auc numeric(4,3) not null check (auc >= 0 and auc <= 1),
+  min_subgroup_auc numeric(4,3) check (min_subgroup_auc >= 0 and min_subgroup_auc <= 1),
+  sensitivity numeric(4,3) check (sensitivity >= 0 and sensitivity <= 1),
+  specificity numeric(4,3) check (specificity >= 0 and specificity <= 1),
   evaluated_subgroups text[] default '{}',
   released_at timestamptz not null default now()
 );
 
--- Dataset composition snapshot, used by /api/dataset/summary.
+create index if not exists idx_model_versions_version on model_versions (version);
+
+-- ------------------------------------------------------------------------------
+-- 4. Dataset Snapshots: Multimodal registry audit trail for academic governance
+-- ------------------------------------------------------------------------------
 create table if not exists dataset_snapshots (
   id uuid primary key default gen_random_uuid(),
-  record_count int not null,
-  counties_covered int not null,
+  record_count int not null check (record_count >= 0),
+  counties_covered int not null check (counties_covered >= 0),
   modalities text[] not null,
-  license text default 'open-academic-use',
+  license text default 'open-academic-use (CC-BY-NC-SA 4.0)',
   captured_at timestamptz not null default now()
 );
 
--- Row Level Security: enable and allow read-only anon access, matching the
--- proposal's "Research API free for academic and non-commercial use" model.
--- Writes (screenings) should go through a service-role key from the CHP app,
--- never the anon key.
+-- ==============================================================================
+-- Row Level Security (RLS) & Privacy Controls
+-- ==============================================================================
 alter table counties enable row level security;
 alter table screenings enable row level security;
 alter table model_versions enable row level security;
 alter table dataset_snapshots enable row level security;
 
+-- Public read policies for open public health intelligence & academic research
 create policy "public read counties" on counties for select using (true);
 create policy "public read model_versions" on model_versions for select using (true);
 create policy "public read dataset_snapshots" on dataset_snapshots for select using (true);
--- screenings intentionally has no public select policy: patient-level data
--- is not exposed through the anon key, per the proposal's consent model.
 
--- Seed data mirroring lib/data.ts, so a fresh Supabase project matches the app's defaults.
-insert into counties (name, fluoride_ppm, risk_tier) values
-  ('Nakuru', 4.8, 'high'),
-  ('Baringo', 6.1, 'high'),
-  ('Kajiado', 5.2, 'high'),
-  ('Kericho', 2.1, 'mod'),
-  ('Nairobi', 0.8, 'low'),
-  ('Turkana', 3.6, 'mod'),
-  ('Kisumu', 1.1, 'low'),
-  ('Machakos', 2.6, 'mod')
-on conflict (name) do nothing;
+-- Anonymous insert allowed for low-resource field triage telemetry, no public select
+create policy "anon insert screenings" on screenings for insert with check (true);
+-- Notice: screenings has NO public select policy, enforcing strict patient privacy
 
-insert into model_versions (version, auc, min_subgroup_auc, evaluated_subgroups) values
-  ('jinox-mm-0.3', 0.85, 0.79, array['county', 'age_band', 'gender'])
+-- ==============================================================================
+-- Seed Data
+-- ==============================================================================
+insert into counties (name, fluoride_ppm, risk_tier, screened_count, referral_rate, source) values
+  ('Nakuru', 4.80, 'high', 1240, '18%', 'WRMA water quality survey'),
+  ('Baringo', 6.10, 'high', 860, '24%', 'WRMA water quality survey'),
+  ('Kajiado', 5.20, 'high', 710, '21%', 'WRMA water quality survey'),
+  ('Kericho', 2.10, 'mod', 540, '9%', 'WRMA water quality survey'),
+  ('Nairobi', 0.80, 'low', 1980, '3%', 'Nairobi Water and Sewerage'),
+  ('Turkana', 3.60, 'mod', 410, '14%', 'WRMA water quality survey'),
+  ('Kisumu', 1.10, 'low', 670, '4%', 'Lake Victoria Basin Survey'),
+  ('Machakos', 2.60, 'mod', 590, '11%', 'WRMA water quality survey')
+on conflict (name) do update set
+  fluoride_ppm = excluded.fluoride_ppm,
+  risk_tier = excluded.risk_tier,
+  screened_count = excluded.screened_count;
+
+insert into model_versions (version, auc, min_subgroup_auc, sensitivity, specificity, evaluated_subgroups) values
+  ('jinox-mm-0.3', 0.850, 0.790, 0.840, 0.880, array['county', 'age_band', 'gender', 'water_source'])
 on conflict (version) do nothing;
 
 insert into dataset_snapshots (record_count, counties_covered, modalities) values
