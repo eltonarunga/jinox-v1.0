@@ -402,7 +402,7 @@ export function ScreeningPanel() {
                 {result.clinical_staging && (
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div className="rounded-lg border border-line p-2.5">
-                      <span className="text-ink-soft block">Dean's Classification:</span>
+                      <span className="text-ink-soft block">Dean&apos;s Classification:</span>
                       <span className="font-semibold text-ink">{result.clinical_staging.deans_index}</span>
                     </div>
                     <div className="rounded-lg border border-line p-2.5">

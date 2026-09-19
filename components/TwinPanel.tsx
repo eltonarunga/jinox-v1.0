@@ -302,7 +302,7 @@ export function TwinPanel() {
                 TFI Index: <span className="font-bold text-teal">{stage.tfiScore}/9</span>
               </div>
               <div className="absolute top-3 right-3 bg-surface/90 backdrop-blur rounded-md px-2 py-1 text-[0.68rem] font-mono border border-line">
-                Dean's: <span className="font-bold text-clay">{stage.deansIndex}</span>
+                Dean&apos;s: <span className="font-bold text-clay">{stage.deansIndex}</span>
               </div>
             </div>
 

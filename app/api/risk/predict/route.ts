@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fuseRisk } from "@/lib/risk";
 import { recordScreeningEvent } from "@/lib/supabase";
-import { getAllCountyNames } from "@/lib/data";
 
 export async function POST(req: NextRequest) {
   try {

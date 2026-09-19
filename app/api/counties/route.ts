@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const dbCounties = await fetchCountiesFromDb();
     const isLive = Boolean(dbCounties && dbCounties.length > 0);
-    const counties = isLive ? dbCounties : seededCounties;
+    const counties = dbCounties && dbCounties.length > 0 ? dbCounties : seededCounties;
 
     return NextResponse.json(
       {
