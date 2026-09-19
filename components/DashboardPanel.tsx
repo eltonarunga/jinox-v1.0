@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { dashboardStats } from "@/lib/data";
-import type { DashboardStatItem } from "@/lib/types";
 
 const CATEGORIES = [
   { id: "all", label: "All Milestones" },
