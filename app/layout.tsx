@@ -1,50 +1,44 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 
-const fraunces = Fraunces({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  weight: ["600", "700", "800"],
+  variable: "--font-plus-jakarta",
   display: "swap",
 });
 
-const ibmPlexSans = IBM_Plex_Sans({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-ibm-sans",
-  display: "swap",
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-ibm-mono",
+  variable: "--font-inter",
   display: "swap",
 });
 
 export const viewport: Viewport = {
-  themeColor: "#0B4F4A",
+  themeColor: "#006a61",
   width: "device-width",
   initialScale: 1,
 };
 
 export const metadata: Metadata = {
-  title: "JinoX AI — Multimodal Oral & Craniofacial Health Platform",
+  title: "JinoX AI — Clinical Workstation & Multimodal Platform",
   description:
-    "Full-stack multimodal AI prototype fusing intraoral imaging, environmental groundwater fluoride telemetry, and craniofacial genomics for the Kenya pilot.",
+    "Full-stack multimodal AI platform fusing intraoral imaging, environmental groundwater fluoride telemetry, and craniofacial genomics for the Kenya pilot.",
   authors: [{ name: "JinoX AI Project Team" }],
   keywords: [
     "JinoX AI",
-    "Oral Health",
+    "Clinical Workstation",
     "Fluorosis Surveillance",
     "Multimodal AI",
-    "Kenya Public Health",
+    "Kenya Rift Valley",
     "Digital Twin",
-    "Craniofacial Genomics",
+    "Edge Diagnostics",
   ],
   openGraph: {
-    title: "JinoX AI — Multimodal Oral & Craniofacial Health Platform",
-    description: "Multimodal AI diagnostics and environmental intelligence for endemic fluorosis.",
+    title: "JinoX AI — Clinical Workstation",
+    description: "Multimodal AI diagnostics and climate-health intelligence for endemic fluorosis.",
     type: "website",
     locale: "en_KE",
   },
@@ -58,9 +52,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable}`}
+      className={`${plusJakartaSans.variable} ${inter.variable}`}
     >
-      <body className="font-body bg-bg text-ink min-h-screen flex flex-col">{children}</body>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        />
+      </head>
+      <body className="bg-background font-body-md text-on-surface min-h-screen flex flex-col">
+        {children}
+      </body>
     </html>
   );
 }
