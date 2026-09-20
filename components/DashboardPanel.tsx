@@ -45,26 +45,23 @@ export function DashboardPanel() {
   };
 
   return (
-    <div className="flex flex-col w-full p-space-md max-w-[1720px] mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-7">
+    <div className="flex flex-col w-full p-space-md max-w-[1720px] mx-auto space-y-md">
+      {/* Top Header & Export CTA */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="mb-2 inline-flex items-center gap-1.5 rounded-md bg-secondary-container px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-on-secondary-container">
+          <span className="inline-flex items-center gap-1 rounded-md bg-secondary-container px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-on-secondary-container">
             Governance &amp; Impact
           </span>
-          <h2 className="font-headline-xl text-headline-xl font-bold tracking-tight text-on-surface mt-2">
-            18-Month Program Milestone Projections
+          <h2 className="font-headline-xl text-headline-xl font-bold tracking-tight text-on-surface mt-1">
+            Program Milestone Projections
           </h2>
-          <p className="mt-2 text-body-md text-body-md text-on-surface-variant max-w-2xl">
-            Cumulative performance metrics and capacity rollout across Nakuru and Rift Valley pilot
-            counties, aligned with the Google.org Impact Challenge AI for Science proposal targets.
-          </p>
         </div>
 
         <button
           onClick={handleExportJson}
-          className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-label-md text-label-md font-semibold text-on-surface shadow-sm hover:bg-surface-container-low transition self-start sm:self-auto"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-label-md text-label-md font-bold text-on-primary shadow-sm hover:bg-primary-container transition"
         >
-          <span className="material-symbols-outlined text-[18px] text-secondary">
+          <span className="material-symbols-outlined text-[18px]">
             download
           </span>
           Export Report (JSON)
@@ -72,99 +69,91 @@ export function DashboardPanel() {
       </div>
 
       {/* Program Health Banner */}
-      <div className="rounded-2xl border border-surface-container bg-surface-container-lowest p-6 shadow-sm mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="text-label-sm text-label-sm font-semibold text-on-surface-variant uppercase tracking-wider">
-              Pilot Execution Status
-            </div>
-            <div className="text-headline-lg text-headline-lg font-bold text-on-surface mt-1">
-              Phase 1 On-Track · {overallProgress}% Aggregate Target Completion
-            </div>
-            <p className="text-body-sm text-body-sm text-on-surface-variant mt-1">
-              Mid-term evaluation projected for Q3. Clinical pipeline active across 9 health facilities.
-            </p>
+      <div className="rounded-xl border border-surface-container bg-surface-container-lowest p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <div className="text-label-sm text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">
+            Pilot Execution Status
           </div>
+          <div className="text-headline-lg text-headline-lg font-bold text-on-surface mt-0.5">
+            Phase 1 On-Track · {overallProgress}% Completion
+          </div>
+        </div>
 
-          <div className="w-full md:w-64">
-            <div className="flex justify-between text-data-mono text-data-mono font-semibold text-on-surface mb-1.5">
-              <span>Overall Progress</span>
-              <span>{overallProgress}%</span>
-            </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-surface-container">
-              <div
-                className="h-full rounded-full bg-secondary"
-                style={{ width: `${overallProgress}%` }}
-              />
-            </div>
+        <div className="w-full md:w-64">
+          <div className="flex justify-between text-data-mono text-[12px] font-bold text-on-surface mb-1">
+            <span>Overall Progress</span>
+            <span>{overallProgress}%</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-surface-container">
+            <div
+              className="h-full rounded-full bg-secondary"
+              style={{ width: `${overallProgress}%` }}
+            />
           </div>
         </div>
       </div>
 
-      {/* Category Filter Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-6 text-label-sm text-label-sm">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setActiveCategory(cat.id)}
-            className={`rounded-lg px-3 py-1.5 font-medium transition whitespace-nowrap ${
-              activeCategory === cat.id
-                ? "bg-secondary text-on-secondary shadow-sm font-semibold"
-                : "bg-surface-container-lowest border border-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
+      {/* Category Filter Dropdown */}
+      <div className="flex items-center justify-between bg-surface-container-lowest p-3 rounded-xl border border-surface-container shadow-sm">
+        <label className="font-label-md text-label-md font-bold text-on-surface uppercase tracking-wide flex items-center gap-2">
+          <span className="material-symbols-outlined text-[18px] text-secondary">
+            filter_list
+          </span>
+          Filter Milestones Dropdown:
+        </label>
+
+        <select
+          value={activeCategory}
+          onChange={(e) => setActiveCategory(e.target.value)}
+          className="bg-surface-container-low text-on-surface font-label-md text-label-md px-3 py-1.5 rounded-lg border border-surface-container outline-none cursor-pointer font-bold"
+        >
+          {CATEGORIES.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Cards Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {filteredStats.map((s) => (
           <div
             key={s.label}
-            className="rounded-2xl border border-surface-container bg-surface-container-lowest p-5 shadow-sm transition hover:shadow-md flex flex-col justify-between"
+            className="rounded-xl border border-surface-container bg-surface-container-lowest p-4 shadow-sm flex flex-col justify-between"
           >
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-label-sm text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-label-sm text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">
                   {s.label}
                 </span>
-                <span className="rounded-full bg-surface-container px-2 py-0.5 text-label-sm text-label-sm font-data-mono capitalize text-on-surface-variant">
+                <span className="rounded bg-surface-container px-2 py-0.5 text-[10px] font-data-mono uppercase text-on-surface-variant font-semibold">
                   {s.category}
                 </span>
               </div>
 
               <div className="font-display-lg text-display-lg font-bold text-secondary mt-1">
                 {s.current}
-                <span className="ml-1.5 font-body-sm text-body-sm font-normal text-on-surface-variant">
-                  / target {s.target}
+                <span className="ml-1 font-body-sm text-body-sm font-normal text-on-surface-variant">
+                  / {s.target}
                 </span>
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-surface-container">
+            <div className="mt-3 pt-2 border-t border-surface-container">
               <div className="h-1.5 overflow-hidden rounded-full bg-surface-container">
                 <div
-                  className="h-full rounded-full bg-secondary transition-all duration-700"
+                  className="h-full rounded-full bg-secondary"
                   style={{ width: `${Math.min(100, s.pct)}%` }}
                 />
               </div>
-              <div className="mt-2 flex justify-between text-data-mono text-data-mono text-on-surface-variant">
+              <div className="mt-1 flex justify-between text-data-mono text-[11px] text-on-surface-variant">
                 <span>Current: {s.current}</span>
-                <span className="font-semibold text-on-surface">{s.pct}% completed</span>
+                <span className="font-bold text-on-surface">{s.pct}% completed</span>
               </div>
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Research and Governance Context Note */}
-      <div className="mt-7 rounded-xl border-l-4 border-secondary bg-secondary-container/40 p-4 text-body-sm text-body-sm text-on-surface shadow-sm">
-        <p className="font-semibold text-secondary mb-0.5">Ethical Oversight &amp; Data Governance</p>
-        All simulated milestones comply with the proposed governance framework: patient-level intraoral
-        imaging data is processed strictly at edge nodes on Community Health Promoter tablets with federated
-        weight updates. Only anonymized environmental surveillance metrics are persisted to public research endpoints.
       </div>
     </div>
   );
