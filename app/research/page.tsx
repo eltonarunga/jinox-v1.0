@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { createBrowserClient, type Session } from "@supabase/ssr";
+import { createBrowserClient } from "@supabase/ssr";
+import type { Session } from "@supabase/supabase-js";
 import Link from "next/link";
 
 type Project = { id: string; name: string; description: string; research_area: string; status: string; created_at: string };
