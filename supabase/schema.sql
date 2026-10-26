@@ -23,8 +23,8 @@ create table if not exists counties (
   fluoride_ppm numeric(5,2) not null check (fluoride_ppm >= 0),
   risk_tier text not null check (risk_tier in ('low', 'mod', 'high')),
   screened_count int not null default 0,
-  referral_rate text default '0%',
-  source text default 'WRMA water quality survey',
+  referral_rate text,
+  source text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -81,7 +81,7 @@ create table if not exists dataset_snapshots (
   record_count int not null check (record_count >= 0),
   counties_covered int not null check (counties_covered >= 0),
   modalities text[] not null,
-  license text default 'open-academic-use (CC-BY-NC-SA 4.0)',
+  license text,
   captured_at timestamptz not null default now()
 );
 
@@ -101,27 +101,3 @@ create policy "public read dataset_snapshots" on dataset_snapshots for select us
 -- Anonymous insert allowed for low-resource field triage telemetry, no public select
 create policy "anon insert screenings" on screenings for insert with check (true);
 -- Notice: screenings has NO public select policy, enforcing strict patient privacy
-
--- ==============================================================================
--- Seed Data
--- ==============================================================================
-insert into counties (name, fluoride_ppm, risk_tier, screened_count, referral_rate, source) values
-  ('Nakuru', 4.80, 'high', 1240, '18%', 'WRMA water quality survey'),
-  ('Baringo', 6.10, 'high', 860, '24%', 'WRMA water quality survey'),
-  ('Kajiado', 5.20, 'high', 710, '21%', 'WRMA water quality survey'),
-  ('Kericho', 2.10, 'mod', 540, '9%', 'WRMA water quality survey'),
-  ('Nairobi', 0.80, 'low', 1980, '3%', 'Nairobi Water and Sewerage'),
-  ('Turkana', 3.60, 'mod', 410, '14%', 'WRMA water quality survey'),
-  ('Kisumu', 1.10, 'low', 670, '4%', 'Lake Victoria Basin Survey'),
-  ('Machakos', 2.60, 'mod', 590, '11%', 'WRMA water quality survey')
-on conflict (name) do update set
-  fluoride_ppm = excluded.fluoride_ppm,
-  risk_tier = excluded.risk_tier,
-  screened_count = excluded.screened_count;
-
-insert into model_versions (version, auc, min_subgroup_auc, sensitivity, specificity, evaluated_subgroups) values
-  ('jinox-mm-0.3', 0.850, 0.790, 0.840, 0.880, array['county', 'age_band', 'gender', 'water_source'])
-on conflict (version) do nothing;
-
-insert into dataset_snapshots (record_count, counties_covered, modalities) values
-  (52340, 22, array['imaging', 'clinical', 'environmental', 'genomic']);
