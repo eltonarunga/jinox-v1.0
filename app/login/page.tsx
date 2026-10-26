@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => searchParams.get("error") === "oauth_callback" ? "Google sign-in could not be completed. Please try again, and confirm the OAuth callback URLs in Supabase and Google Cloud." : "");
 
   async function signInWithGoogle() {
     setLoading(true);
