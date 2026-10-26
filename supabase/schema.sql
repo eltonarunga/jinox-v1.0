@@ -23,8 +23,8 @@ create table if not exists counties (
   fluoride_ppm numeric(5,2) not null check (fluoride_ppm >= 0),
   risk_tier text not null check (risk_tier in ('low', 'mod', 'high')),
   screened_count int not null default 0,
-  referral_rate text default '0%',
-  source text default 'WRMA water quality survey',
+  referral_rate text,
+  source text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -81,7 +81,7 @@ create table if not exists dataset_snapshots (
   record_count int not null check (record_count >= 0),
   counties_covered int not null check (counties_covered >= 0),
   modalities text[] not null,
-  license text default 'open-academic-use (CC-BY-NC-SA 4.0)',
+  license text,
   captured_at timestamptz not null default now()
 );
 
