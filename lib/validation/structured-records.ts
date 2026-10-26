@@ -66,7 +66,7 @@ export async function readStructuredFile(file: File, modality: UploadModality): 
   const parsed = parseCsv(text);
   if (typeof parsed === "string") return { records: [], error: parsed };
   return {
-    records: parsed.rows.map((values) => Object.fromEntries(parsed.headers.map((header, index) => [header, values[index] ?? ""])),
+    records: parsed.rows.map((values) => Object.fromEntries(parsed.headers.map((header, index) => [header, values[index] ?? ""]))),
     error: null,
   };
 }
