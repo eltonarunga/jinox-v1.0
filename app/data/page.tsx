@@ -172,7 +172,7 @@ export default function DataIntakePage() {
         owner_id: userId,
         modality,
         original_filename: generatedName,
-        content_type: file.type || "application/octet-stream",
+        content_type: expectedMimeType(file),
         byte_size: file.size,
         storage_path: storagePath,
         metadata: { filename_redacted: true, client_extension: extension },
