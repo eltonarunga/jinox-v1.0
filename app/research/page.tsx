@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { createClient, type Session } from "@supabase/supabase-js";
+import { useCallback, useEffect, useState } from "react";
+import { createBrowserClient, type Session } from "@supabase/ssr";
 import Link from "next/link";
 
 type Project = { id: string; name: string; description: string; research_area: string; status: string; created_at: string };
@@ -12,7 +12,7 @@ type Tab = "overview" | "datasets" | "experiments" | "consents";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = url && anonKey ? createClient(url, anonKey) : null;
+const supabase = url && anonKey ? createBrowserClient(url, anonKey) : null;
 const label = (value: string) => value.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 const areas = ["oral_health", "environmental_health", "genomics", "imaging", "digital_twin", "multimodal", "other"];
 const modalities = ["environmental", "panoramic_xray", "periapical_xray", "bitewing_xray", "cbct", "intraoral_photo", "clinical_text", "genomic", "other"];
@@ -41,8 +41,6 @@ function Glyph({ name, size = 18 }: { name: string; size?: number }) {
 export default function ResearchWorkspacePage() {
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
   const [projects, setProjects] = useState<Project[]>([]);
@@ -93,15 +91,25 @@ export default function ResearchWorkspacePage() {
 
   useEffect(() => { if (session) void refresh(); }, [session, refresh]);
 
-  async function signIn(event: FormEvent) {
-    event.preventDefault(); setAuthBusy(true); setError("");
+  async function signInWithGoogle() {
+    setAuthBusy(true);
+    setError("");
     try {
-      if (!supabase) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY.");
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInError) throw signInError;
-      setPassword(""); setNotice("Signed in successfully.");
-    } catch (e) { setError(e instanceof Error ? e.message : "Sign-in failed."); }
-    finally { setAuthBusy(false); }
+      if (!supabase) throw new Error("Google sign-in is not configured. Please contact the workspace administrator.");
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
+      callbackUrl.searchParams.set("next", "/research");
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: callbackUrl.toString(),
+          queryParams: { access_type: "offline", prompt: "select_account" },
+        },
+      });
+      if (authError) throw authError;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unable to start Google sign-in. Please try again.");
+      setAuthBusy(false);
+    }
   }
 
   async function signOut() {
@@ -132,7 +140,7 @@ export default function ResearchWorkspacePage() {
 
   if (!authReady) return <main className="grid min-h-screen place-items-center bg-[#f7f7f7] text-sm text-slate-500"><div className="flex items-center gap-3"><span className="h-2 w-2 animate-pulse rounded-full bg-black" />Loading research workspace</div></main>;
 
-  if (!session) return <main className="relative grid min-h-screen place-items-center overflow-hidden bg-[#f7f7f7] px-4 py-10"><div className="pointer-events-none absolute -right-28 -top-32 h-96 w-96 rounded-full bg-slate-200/70 blur-3xl" /><div className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-slate-100 blur-3xl" /><div className="relative w-full max-w-[420px] rounded-3xl border border-white bg-white/90 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur"><Brand /><div className="mb-7 mt-9"><p className="text-sm font-medium text-slate-900">Research infrastructure</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Welcome back.</h1><p className="mt-2 text-sm leading-6 text-slate-500">Sign in to continue to your secure research workspace.</p></div>{!supabase && <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Configure the public Supabase URL and anon key in your environment.</p>}{error && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}<form onSubmit={signIn} className="space-y-4"><label className="block text-sm font-medium text-slate-700">Email address<input required type="email" autoComplete="email" placeholder="you@organisation.org" value={email} onChange={(e) => setEmail(e.target.value)} className={field} /></label><label className="block text-sm font-medium text-slate-700">Password<input required type="password" autoComplete="current-password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} className={field} /></label><button disabled={authBusy || !supabase} className={`${button} mt-2 w-full`}>{authBusy ? "Signing in…" : <>Sign in <Glyph name="arrow" size={16} /></>}</button></form><div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-500"><Glyph name="lock" size={14} /> Protected by Supabase authentication and access policies</div><p className="mt-8 border-t border-slate-100 pt-5 text-center text-xs text-slate-400">JinoX AI · Research workspace</p></div></main>;
+  if (!session) return <main className="relative grid min-h-screen place-items-center overflow-hidden bg-[#f7f7f7] px-4 py-10"><div className="pointer-events-none absolute -right-28 -top-32 h-96 w-96 rounded-full bg-slate-200/70 blur-3xl" /><div className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-slate-100 blur-3xl" /><div className="relative w-full max-w-[420px] rounded-3xl border border-white bg-white/90 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur"><Brand /><div className="mb-7 mt-9"><p className="text-sm font-medium text-slate-900">Research infrastructure</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Sign in to JinoX AI</h1><p className="mt-2 text-sm leading-6 text-slate-500">Use your Google account to access your secure research workspace. Only Google sign-in is available.</p></div>{!supabase && <p role="alert" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Google sign-in is not configured. Please contact the workspace administrator.</p>}{error && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}<button type="button" onClick={signInWithGoogle} disabled={authBusy || !supabase} className={`${button} mt-2 w-full`}><svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.09-1.92 3.27-4.74 3.27-8.1Z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.15v2.87A11 11 0 0 0 12 23Z"/><path fill="#FBBC05" d="M5.84 14.11A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.11V7.02H2.15A11 11 0 0 0 1 12c0 1.78.43 3.47 1.15 4.98l3.69-2.87Z"/><path fill="#EA4335" d="M12 5.36c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.46 14.97 0 12 0A11 11 0 0 0 2.15 7.02l3.69 2.87C6.71 7.29 9.14 5.36 12 5.36Z"/></svg>{authBusy ? "Redirecting to Google…" : "Continue with Google"}<Glyph name="arrow" size={16} /></button><div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-500"><Glyph name="lock" size={14} />Protected by Supabase authentication and access policies</div><p className="mt-8 border-t border-slate-100 pt-5 text-center text-xs leading-5 text-slate-400">Access is subject to research governance policies. Prototype outputs are not validated clinical advice.</p></div></main>
 
   return <main className="min-h-screen bg-[#f7f7f7] text-slate-900 antialiased">
     <div className="mx-auto flex min-h-screen max-w-[1600px]">
