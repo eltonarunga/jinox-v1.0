@@ -1,0 +1,2 @@
+sample_site_code,county,sub_county,water_source,sampled_on,fluoride_mg_l,temperature_c,rainfall_mm,source_name,notes
+SITE_001,Nakuru,Nakuru Town,borehole,2026-01-15,1.2,24.5,12.0,Verified laboratory report,Example row must be replaced with verified data
