@@ -9,6 +9,7 @@ import { FluorosisPanel } from "@/components/FluorosisPanel";
 import { TwinPanel } from "@/components/TwinPanel";
 import { ApiExplorerPanel } from "@/components/ApiExplorerPanel";
 import { DashboardPanel } from "@/components/DashboardPanel";
+import { AuthControls } from "@/components/AuthControls";
 
 export interface PlatformTab {
   id: string;
@@ -127,6 +128,7 @@ function MainContent() {
               <Link href="/research" className="inline-flex h-10 items-center gap-2 rounded-xl bg-black px-3.5 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 sm:px-4">
                 <ModuleIcon name="science" className="text-[17px]" /><span className="hidden sm:inline">Research</span><span className="sm:hidden">Lab</span>
               </Link>
+              <AuthControls />
             </div>
           </div>
         </header>
