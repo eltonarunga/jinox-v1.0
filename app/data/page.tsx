@@ -61,6 +61,7 @@ export default function DataIntakePage() {
   const [ageBand, setAgeBand] = useState("unknown");
   const [purpose, setPurpose] = useState("research");
   const [consentConfirmed, setConsentConfirmed] = useState(false);
+  const [uploadConsentConfirmed, setUploadConsentConfirmed] = useState(false);
   const [consentBasis, setConsentBasis] = useState<"obtained" | "ethics_waiver">("obtained");
   const [modality, setModality] = useState<UploadModality>("intraoral_photo");
   const [files, setFiles] = useState<File[]>([]);
@@ -148,7 +149,7 @@ export default function DataIntakePage() {
     event.preventDefault();
     setError(""); setNotice("");
     if (!supabase || !userId || !selectedCaseId) { setError("Create or select a case before uploading files."); return; }
-    if (!consentConfirmed) { setError("Confirm the case has the required consent or ethics approval and contains no direct identifiers before uploading."); return; }
+    if (!uploadConsentConfirmed) { setError("Confirm that this upload is covered by the case consent or approved ethics waiver and contains no direct identifiers."); return; }
     const uploadCase = cases.find((item) => item.id === selectedCaseId);
     if (!uploadCase || !["obtained", "ethics_waiver"].includes(uploadCase.consent_status)) { setError("Uploads require a case with documented consent or an approved ethics waiver."); return; }
     if (!files.length) { setError("Choose at least one file."); return; }
@@ -189,7 +190,7 @@ export default function DataIntakePage() {
         failures.push(`${file.name}: file metadata could not be saved (${metadataError.message})`);
       } else succeeded += 1;
     }
-    setBusy(false); setUploadProgress(""); setFiles([]);
+    setBusy(false); setUploadProgress(""); setFiles([]); setUploadConsentConfirmed(false);
     await refreshCaseDetails(selectedCaseId);
     if (failures.length) setError(`${succeeded} file(s) uploaded. ${failures.join(" | ")}`);
     else setNotice(`${succeeded} file(s) uploaded successfully and queued for review. No AI analysis was run.`);
@@ -298,6 +299,10 @@ export default function DataIntakePage() {
                 <p className="mt-2 text-xs leading-5 text-slate-500">Accepted: {currentUploadType.accept.replaceAll(",", ", ")} · Maximum {Math.round(currentUploadType.maxBytes / (1024 * 1024))} MB per file.</p>
                 {files.length > 0 && <ul className="mt-3 space-y-1 text-xs text-slate-700">{files.map((file) => <li key={file.name + file.size} className="flex justify-between gap-3"><span className="break-all">{file.name}</span><span className="shrink-0">{humanSize(file.size)}</span></li>)}</ul>}
               </div>
+              <label className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 text-sm leading-5 text-slate-700">
+                <input type="checkbox" checked={uploadConsentConfirmed} onChange={(event) => setUploadConsentConfirmed(event.target.checked)} className="mt-1 size-4 accent-black" />
+                <span>I confirm these files are covered by the selected case’s documented consent or ethics waiver, and contain no direct identifiers in the file content or metadata.</span>
+              </label>
               <button className={button} type="submit" disabled={busy || !selectedCaseId || !files.length}>{busy ? "Working…" : "Upload and register files"}</button>
               {uploadProgress && <p role="status" className="text-sm text-slate-600">{uploadProgress}</p>}
             </form>
