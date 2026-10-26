@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { createBrowserClient, type Session } from "@supabase/ssr";
 import Link from "next/link";
 
