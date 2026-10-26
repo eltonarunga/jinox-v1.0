@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { expectedMimeType, uploadTypes, validateUpload, type UploadModality } from "@/lib/validation/uploads";
+import { validateStructuredFile } from "@/lib/validation/structured-records";
 
 type CaseRecord = {
   id: string;
@@ -151,6 +152,8 @@ export default function DataIntakePage() {
     for (const file of files) {
       const validationError = validateUpload(file, modality);
       if (validationError) { setError(`${file.name}: ${validationError}`); return; }
+      const structuredError = await validateStructuredFile(file, modality, cases.map((item) => item.case_code));
+      if (structuredError) { setError(`${file.name}: ${structuredError}`); return; }
     }
     setBusy(true);
     let succeeded = 0;
@@ -228,7 +231,7 @@ export default function DataIntakePage() {
         </header>
 
         <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-          <strong>Research prototype safety rule.</strong> Upload only data you are authorized to use. Exclude names, national IDs, contact details and identifiers embedded in images or filenames. Files remain private and pending review. This workflow does not perform diagnosis, de-identification of image pixels, malware scanning, DICOM de-identification or model inference.
+          <strong>Research prototype safety rule.</strong> Upload only data you are authorized to use. Exclude names, national IDs, contact details and identifiers embedded in images or filenames. Files remain private and pending review. This workflow does not perform diagnosis, server-side content sniffing, malware scanning, image/DICOM pixel de-identification or model inference. CSV/JSON checks run in the browser and are not a security boundary.
         </div>
         {error && <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
         {notice && <div role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</div>}
@@ -296,7 +299,7 @@ export default function DataIntakePage() {
                 <a className={secondary} href="/templates/clinical-record-template.csv" download>Clinical CSV template</a>
                 <a className={secondary} href="/templates/environmental-data-template.csv" download>Environmental CSV template</a>
               </div>
-              <p className="mt-2 text-xs text-slate-500">Template files are examples. Uploading CSV/JSON currently stores the source file; row-level import and validation is a separate next-stage feature.</p>
+              <p className="mt-2 text-xs text-slate-500">Template files are examples. CSV/JSON files are checked against the expected structure in your browser before storage; automatic ingestion of each row into the database is not enabled yet.</p>
             </div>
           </section>
         </div>
