@@ -152,8 +152,15 @@ create policy "owners can create own observations" on public.clinical_observatio
   );
 drop policy if exists "owners can update own observations" on public.clinical_observations;
 create policy "owners can update own observations" on public.clinical_observations
-  for update to authenticated using (owner_id = (select auth.uid()))
-  with check (owner_id = (select auth.uid()));
+  for update to authenticated using (
+    owner_id = (select auth.uid()) and exists (
+      select 1 from public.clinical_cases c where c.id = case_id and c.owner_id = (select auth.uid())
+    )
+  ) with check (
+    owner_id = (select auth.uid()) and exists (
+      select 1 from public.clinical_cases c where c.id = case_id and c.owner_id = (select auth.uid())
+    )
+  );
 drop policy if exists "owners can delete own observations" on public.clinical_observations;
 create policy "owners can delete own observations" on public.clinical_observations
   for delete to authenticated using (owner_id = (select auth.uid()));
@@ -172,8 +179,19 @@ create policy "owners can create own environmental measurements" on public.envir
   );
 drop policy if exists "owners can update own environmental measurements" on public.environmental_measurements;
 create policy "owners can update own environmental measurements" on public.environmental_measurements
-  for update to authenticated using (owner_id = (select auth.uid()))
-  with check (owner_id = (select auth.uid()));
+  for update to authenticated using (
+    owner_id = (select auth.uid()) and (
+      case_id is null or exists (
+        select 1 from public.clinical_cases c where c.id = case_id and c.owner_id = (select auth.uid())
+      )
+    )
+  ) with check (
+    owner_id = (select auth.uid()) and (
+      case_id is null or exists (
+        select 1 from public.clinical_cases c where c.id = case_id and c.owner_id = (select auth.uid())
+      )
+    )
+  );
 drop policy if exists "owners can delete own environmental measurements" on public.environmental_measurements;
 create policy "owners can delete own environmental measurements" on public.environmental_measurements
   for delete to authenticated using (owner_id = (select auth.uid()));
