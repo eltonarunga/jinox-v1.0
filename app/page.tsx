@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ScreeningPanel } from "@/components/ScreeningPanel";
@@ -57,7 +57,6 @@ function MainContent() {
   const initialTab = TABS.some((t) => t.path === tabQuery) ? (tabQuery as string) : "climate-health-gis";
   const [activeTab, setActiveTab] = useState(initialTab);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (tabQuery && TABS.some((t) => t.path === tabQuery)) setActiveTab(tabQuery);
@@ -104,7 +103,7 @@ function MainContent() {
     <div className="min-h-screen bg-[#f6f8f7] text-slate-900 antialiased">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-slate-200/80 bg-white px-4 py-5 lg:flex">
         <Brand />
-        <nav ref={navRef} className="mt-5 space-y-1" aria-label="Main workspace navigation">{navItems}</nav>
+        <nav className="mt-5 space-y-1" aria-label="Main workspace navigation">{navItems}</nav>
         <div className="mt-auto space-y-3 pt-6">
           <Link href="/research" className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-left transition hover:border-teal-200 hover:bg-teal-50/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-white text-teal-800 shadow-sm"><ModuleIcon name="science" className="text-[20px]" /></span>
