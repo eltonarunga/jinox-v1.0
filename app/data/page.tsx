@@ -157,8 +157,6 @@ export default function DataIntakePage() {
     const uploadCase = cases.find((item) => item.id === selectedCaseId);
     if (!uploadCase || !["obtained", "ethics_waiver"].includes(uploadCase.consent_status)) { setError("Uploads require a case with documented consent or an approved ethics waiver."); return; }
     if (!files.length) { setError("Choose at least one file."); return; }
-    const uploadCase = cases.find((item) => item.id === selectedCaseId);
-    if (!uploadCase) { setError("Selected case could not be found. Refresh and try again."); return; }
     const structuredChecksums = new Map<File, string>();
     for (const file of files) {
       const validationError = validateUpload(file, modality);
