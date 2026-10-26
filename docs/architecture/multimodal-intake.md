@@ -15,10 +15,10 @@
 
 1. An authenticated user creates a case with a pseudonymous code, county, age band, purpose and documented consent basis.
 2. The user selects a modality and explicitly reconfirms consent coverage for each upload batch.
-3. Client checks extension, size and structured CSV/JSON shape. A generated filename is used to avoid storing the original filename, which might contain identifiers.
+3. Client checks extension, size and structured CSV/JSON shape. Structured files are SHA-256 checked for duplicates. A generated filename is used to avoid storing the original filename, which might contain identifiers.
 4. Files are uploaded to the private `jinox-clinical-assets` bucket under `<user-id>/<case-id>/...`.
 5. Asset metadata is registered in `clinical_assets` with `pending_review` status.
-6. Structured observations and environmental measurements are saved to their own RLS-protected tables.
+6. Validated clinical-record rows are imported as unreviewed observations; validated environmental rows are imported as measurements. Both retain source-asset and row references. Manual observations and environmental measurements are also saved to RLS-protected tables.
 
 ## Security model
 
@@ -52,7 +52,7 @@ Run Supabase security/performance advisors after migrations and resolve findings
 
 - Server-side file signature inspection, malware scanning, DICOM metadata de-identification and image pixel de-identification.
 - Background processing for large DICOM studies and 3D scan meshes.
-- Row-level CSV/JSON import into clinical observations and environmental measurements; current workflow validates then stores the source file.
+- Server-side CSV/JSON validation and import orchestration; current structured parsing runs in the browser and is not a security boundary.
 - A trusted reviewer workflow and immutable server-side audit events.
 - Institutional roles and credential verification; clinician role attestation in this prototype is self-declared.
 - Validated diagnostic inference endpoint, model registry, calibration and subgroup evaluation.
