@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JinoX Environmental Measurement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sample_site_code", "county", "water_source", "sampled_on", "source_name"],
+  "properties": {
+    "sample_site_code": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{1,79}$"},
+    "county": {"type": "string", "minLength": 2, "maxLength": 100},
+    "sub_county": {"type": ["string", "null"], "maxLength": 100},
+    "water_source": {"enum": ["borehole", "well", "piped", "surface_water", "bottled", "other", "unknown"]},
+    "sampled_on": {"type": "string", "format": "date"},
+    "fluoride_mg_l": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+    "temperature_c": {"type": ["number", "null"], "minimum": -20, "maximum": 70},
+    "rainfall_mm": {"type": ["number", "null"], "minimum": 0, "maximum": 10000},
+    "source_name": {"type": "string", "minLength": 2, "maxLength": 200},
+    "notes": {"type": "string", "maxLength": 2000}
+  }
+}
