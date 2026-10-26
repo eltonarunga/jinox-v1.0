@@ -226,8 +226,12 @@ export default function DataIntakePage() {
               source_row_number: rowIndex + 1,
             }));
             const { error: importError } = await supabase.from("clinical_observations").insert(observationsToInsert);
-            if (importError) failures.push(`${file.name}: source file is stored, but clinical row import failed (${importError.message})`);
-            else importedClinicalRows += observationsToInsert.length;
+            if (importError) {
+              await supabase.from("clinical_assets").delete().eq("id", asset.id);
+              await supabase.storage.from("jinox-clinical-assets").remove([storagePath]);
+              succeeded -= 1;
+              failures.push(`${file.name}: clinical row import failed; the partial file upload was rolled back (${importError.message})`);
+            } else importedClinicalRows += observationsToInsert.length;
           } else {
             const measurementsToInsert = parsed.records.map((record, rowIndex) => ({
               owner_id: userId,
@@ -246,8 +250,12 @@ export default function DataIntakePage() {
               source_row_number: rowIndex + 1,
             }));
             const { error: importError } = await supabase.from("environmental_measurements").insert(measurementsToInsert);
-            if (importError) failures.push(`${file.name}: source file is stored, but environmental row import failed (${importError.message})`);
-            else importedEnvironmentalRows += measurementsToInsert.length;
+            if (importError) {
+              await supabase.from("clinical_assets").delete().eq("id", asset.id);
+              await supabase.storage.from("jinox-clinical-assets").remove([storagePath]);
+              succeeded -= 1;
+              failures.push(`${file.name}: environmental row import failed; the partial file upload was rolled back (${importError.message})`);
+            } else importedEnvironmentalRows += measurementsToInsert.length;
           }
         }
       }
