@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JinoX Clinical Record Import",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["case_code", "observed_on", "category", "observation_code", "finding"],
+  "properties": {
+    "case_code": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{2,63}$"},
+    "observed_on": {"type": "string", "format": "date"},
+    "category": {"enum": ["dental_caries", "periodontal", "oral_mucosa", "fluorosis", "pain", "occlusion", "other"]},
+    "observation_code": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{1,79}$"},
+    "finding": {"type": "string", "minLength": 1, "maxLength": 3000},
+    "value_numeric": {"type": ["number", "null"]},
+    "unit": {"type": ["string", "null"], "maxLength": 40},
+    "source": {"enum": ["clinician_entered", "imported_record", "research_annotation"]}
+  }
+}
