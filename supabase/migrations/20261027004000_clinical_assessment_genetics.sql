@@ -67,8 +67,15 @@ create policy "owners can create assessments for own cases" on public.clinical_a
   );
 drop policy if exists "owners can update assessments for own cases" on public.clinical_assessments;
 create policy "owners can update assessments for own cases" on public.clinical_assessments
-  for update to authenticated using (owner_id = (select auth.uid()))
-  with check (owner_id = (select auth.uid()) and clinician_role_attested = true);
+  for update to authenticated using (
+    owner_id = (select auth.uid()) and exists (
+      select 1 from public.clinical_cases c where c.id = case_id and c.owner_id = (select auth.uid())
+    )
+  ) with check (
+    owner_id = (select auth.uid()) and clinician_role_attested = true and exists (
+      select 1 from public.clinical_cases c where c.id = case_id and c.owner_id = (select auth.uid())
+    )
+  );
 drop policy if exists "owners can delete assessments for own cases" on public.clinical_assessments;
 create policy "owners can delete assessments for own cases" on public.clinical_assessments
   for delete to authenticated using (owner_id = (select auth.uid()));
