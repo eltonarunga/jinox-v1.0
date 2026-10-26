@@ -4,13 +4,13 @@
 
 :root {
   color-scheme: light;
-  --jinox-ink: #10231f;
-  --jinox-muted: #65736f;
-  --jinox-line: #e3e9e6;
-  --jinox-canvas: #f6f8f7;
-  --jinox-primary: #0f5c50;
-  --jinox-primary-strong: #104b42;
-  --jinox-mint: #dff5ef;
+  --jinox-ink: #111111;
+  --jinox-muted: #666666;
+  --jinox-line: #e5e5e5;
+  --jinox-canvas: #f7f7f7;
+  --jinox-primary: #111111;
+  --jinox-primary-strong: #000000;
+  --jinox-mint: #eeeeee;
 }
 
 @layer base {
@@ -37,12 +37,12 @@
     -webkit-tap-highlight-color: transparent;
   }
   :focus-visible {
-    outline: 2px solid #0f766e;
+    outline: 2px solid #111111;
     outline-offset: 2px;
   }
   ::selection {
-    background: #ccefe5;
-    color: #10231f;
+    background: #e8e8e8;
+    color: #111111;
   }
   main > :first-child {
     margin-top: 0;
@@ -51,7 +51,7 @@
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #cbd5d1 transparent;
+  scrollbar-color: #c9c9c9 transparent;
 }
 
 ::-webkit-scrollbar {
@@ -61,7 +61,7 @@
 ::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
-  background: #cbd5d1;
+  background: #c9c9c9;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-track {
