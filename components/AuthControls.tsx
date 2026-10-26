@@ -55,7 +55,7 @@ export function AuthControls() {
       >
         {signingOut ? "Signing out…" : "Sign out"}
       </button>
-      {error ? <span role="alert" className="sr-only">{error}</span> : null}
+      {error ? <span role="alert" className="max-w-[220px] text-xs text-red-700">{error}</span> : null}
     </div>
   );
 }
