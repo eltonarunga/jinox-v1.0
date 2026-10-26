@@ -1,2 +1,1 @@
 case_code,observed_on,category,observation_code,finding,value_numeric,unit,source
-CASE_001,2026-01-15,dental_caries,caries_status,No cavitated lesion observed,,,clinician_entered
