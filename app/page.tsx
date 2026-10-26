@@ -96,7 +96,7 @@ function MainContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f6f8f7] text-slate-900 antialiased">
+    <div className="min-h-screen bg-[#f7f7f7] text-slate-900 antialiased">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-slate-200/80 bg-white px-4 py-5 lg:flex">
         <Brand />
         <nav className="mt-5 space-y-1" aria-label="Main workspace navigation">{navItems}</nav>
@@ -163,7 +163,7 @@ function MainContent() {
 
 export default function Home() {
   return (
-    <Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#f6f8f7] text-sm text-slate-500"><div className="flex items-center gap-3"><span className="h-2 w-2 animate-pulse rounded-full bg-black" />Loading JinoX AI workspace…</div></div>}>
+    <Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#f7f7f7] text-sm text-slate-500"><div className="flex items-center gap-3"><span className="h-2 w-2 animate-pulse rounded-full bg-black" />Loading JinoX AI workspace…</div></div>}>
       <MainContent />
     </Suspense>
   );
