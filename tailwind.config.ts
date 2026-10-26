@@ -59,9 +59,9 @@ const config: Config = {
         "on-tertiary": "#ffffff",
 
         // Legacy / Fallback Colors
-        bg: "#f6f8f7",
+        bg: "#f7f7f7",
         "surface-alt": "#f1f1f1",
-        ink: "#10231f",
+        ink: "#111111",
         "ink-soft": "#666666",
         teal: {
           DEFAULT: "#111111",
