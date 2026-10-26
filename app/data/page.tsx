@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { uploadTypes, validateUpload, type UploadModality } from "@/lib/validation/uploads";
+import { expectedMimeType, uploadTypes, validateUpload, type UploadModality } from "@/lib/validation/uploads";
 
 type CaseRecord = {
   id: string;
@@ -162,7 +162,7 @@ export default function DataIntakePage() {
       const generatedName = `${modality}-${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}${extension}`;
       const storagePath = `${userId}/${selectedCaseId}/${crypto.randomUUID()}-${generatedName}`;
       const { error: storageError } = await supabase.storage.from("jinox-clinical-assets").upload(storagePath, file, {
-        contentType: file.type || "application/octet-stream",
+        contentType: expectedMimeType(file),
         cacheControl: "3600",
         upsert: false,
       });
