@@ -12,7 +12,12 @@ export default function LoginPage() {
     setError("");
     try {
       const supabase = getSupabaseBrowserClient();
-      const redirectTo = new URL("/auth/callback", window.location.origin).toString();
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
+      const requestedNext = new URL(window.location.href).searchParams.get("next");
+      if (requestedNext && requestedNext.startsWith("/") && !requestedNext.startsWith("//")) {
+        callbackUrl.searchParams.set("next", requestedNext);
+      }
+      const redirectTo = callbackUrl.toString();
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo, queryParams: { access_type: "offline", prompt: "select_account" } },
