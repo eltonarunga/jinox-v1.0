@@ -175,6 +175,7 @@ export default function DataIntakePage() {
     setBusy(true);
     let succeeded = 0;
     let importedClinicalRows = 0;
+    let importedEnvironmentalRows = 0;
     const failures: string[] = [];
     for (let index = 0; index < files.length; index += 1) {
       const file = files[index];
@@ -205,11 +206,11 @@ export default function DataIntakePage() {
         failures.push(`${file.name}: file metadata could not be saved (${metadataError?.message ?? "missing asset record"}).`);
       } else {
         succeeded += 1;
-        if (modality === "clinical_record") {
+        if (modality === "clinical_record" || modality === "environmental_dataset") {
           const parsed = await readStructuredFile(file, modality);
           if (parsed.error) {
             failures.push(`${file.name}: source file is stored, but records were not imported (${parsed.error})`);
-          } else {
+          } else if (modality === "clinical_record") {
             const observationsToInsert = parsed.records.map((record, rowIndex) => ({
               case_id: selectedCaseId,
               owner_id: userId,
@@ -225,16 +226,36 @@ export default function DataIntakePage() {
               source_row_number: rowIndex + 1,
             }));
             const { error: importError } = await supabase.from("clinical_observations").insert(observationsToInsert);
-            if (importError) failures.push(`${file.name}: source file is stored, but database row import failed (${importError.message})`);
+            if (importError) failures.push(`${file.name}: source file is stored, but clinical row import failed (${importError.message})`);
             else importedClinicalRows += observationsToInsert.length;
+          } else {
+            const measurementsToInsert = parsed.records.map((record, rowIndex) => ({
+              owner_id: userId,
+              case_id: null,
+              sample_site_code: String(record.sample_site_code).trim(),
+              county: String(record.county).trim(),
+              sub_county: record.sub_county ? String(record.sub_county).trim() : null,
+              water_source: String(record.water_source),
+              sampled_on: String(record.sampled_on),
+              fluoride_mg_l: record.fluoride_mg_l === undefined || record.fluoride_mg_l === null || String(record.fluoride_mg_l).trim() === "" ? null : Number(record.fluoride_mg_l),
+              temperature_c: record.temperature_c === undefined || record.temperature_c === null || String(record.temperature_c).trim() === "" ? null : Number(record.temperature_c),
+              rainfall_mm: record.rainfall_mm === undefined || record.rainfall_mm === null || String(record.rainfall_mm).trim() === "" ? null : Number(record.rainfall_mm),
+              source_name: String(record.source_name).trim(),
+              notes: record.notes ? String(record.notes).trim() : "",
+              source_asset_id: asset.id,
+              source_row_number: rowIndex + 1,
+            }));
+            const { error: importError } = await supabase.from("environmental_measurements").insert(measurementsToInsert);
+            if (importError) failures.push(`${file.name}: source file is stored, but environmental row import failed (${importError.message})`);
+            else importedEnvironmentalRows += measurementsToInsert.length;
           }
         }
       }
     }
     setBusy(false); setUploadProgress(""); setFiles([]); setUploadConsentConfirmed(false);
     await refreshCaseDetails(selectedCaseId);
-    if (failures.length) setError(`${succeeded} file(s) stored. ${importedClinicalRows} clinical record row(s) imported. ${failures.join(" | ")}`);
-    else setNotice(`${succeeded} file(s) stored and queued for review; ${importedClinicalRows} clinical record row(s) imported. Environmental CSV/JSON is retained as a source file; enter individual measurements in Environmental Data. No AI analysis was run.`);
+    if (failures.length) setError(`${succeeded} file(s) stored. ${importedClinicalRows} clinical row(s) and ${importedEnvironmentalRows} environmental row(s) imported. ${failures.join(" | ")}`);
+    else setNotice(`${succeeded} file(s) stored and queued for review; ${importedClinicalRows} clinical row(s) and ${importedEnvironmentalRows} environmental row(s) imported. No AI analysis was run.`);
   }
 
   async function addObservation(event: FormEvent<HTMLFormElement>) {
@@ -353,7 +374,7 @@ export default function DataIntakePage() {
                 <a className={secondary} href="/templates/clinical-record-template.csv" download>Clinical CSV template</a>
                 <a className={secondary} href="/templates/environmental-data-template.csv" download>Environmental CSV template</a>
               </div>
-              <p className="mt-2 text-xs text-slate-500">Clinical-record CSV/JSON rows are schema-checked and imported as unreviewed observations. Environmental CSV/JSON rows are validated and stored as source files; use the Environmental Data workspace to enter measurements. Validation currently runs in the browser.</p>
+              <p className="mt-2 text-xs text-slate-500">Clinical-record CSV/JSON rows are imported as unreviewed observations; environmental CSV/JSON rows become measurements. Browser-side checks are not a security boundary; database constraints and RLS are also applied.</p>
             </div>
           </section>
         </div>
