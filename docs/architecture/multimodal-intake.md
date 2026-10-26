@@ -37,6 +37,7 @@ Migrations are additive and must be reviewed before production application:
 1. `20261027003000_multimodal_data_intake.sql`
 2. `20261027004000_clinical_assessment_genetics.sql`
 3. `20261027005000_restrict_clinical_upload_mime_types.sql`
+4. `20261027005500_idempotent_clinical_record_imports.sql`
 
 After applying them in a non-production Supabase project, verify:
 - authenticated user A can create and read their own cases, assets, observations and environmental rows;
