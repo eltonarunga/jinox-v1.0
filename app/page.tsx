@@ -31,16 +31,12 @@ const TABS: PlatformTab[] = [
 
 function Brand() {
   return (
-    <Link href="/" className="group inline-flex min-w-0 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-4" aria-label="JinoX AI home">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-teal-900 text-white shadow-sm">
-        <svg viewBox="0 0 32 32" className="h-6 w-6" fill="none" aria-hidden="true">
-          <path d="M7 8.5h18M7 16h11M7 23.5h18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
-          <circle cx="23" cy="16" r="3.5" fill="#7DE3D4" />
-        </svg>
+    <Link href="/" className="group inline-flex min-w-0 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-4" aria-label="JinoX AI home">
+      <span className="inline-flex shrink-0 items-center rounded-md bg-black px-3.5 py-2.5 text-white shadow-sm ring-1 ring-black/5">
+        <span className="whitespace-nowrap text-[15px] font-bold tracking-[-.055em]">JinoX AI</span>
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-[16px] font-bold tracking-[-.04em] text-slate-950">JinoX <span className="text-teal-800">AI</span></span>
-        <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-[.16em] text-slate-400">Clinical intelligence</span>
+        <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-[.16em] text-slate-500">Clinical intelligence</span>
       </span>
     </Link>
   );
