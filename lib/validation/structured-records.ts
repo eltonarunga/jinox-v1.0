@@ -27,6 +27,7 @@ function parseCsv(text: string): { headers: string[]; rows: string[][] } | strin
   if (nonEmpty.length < 2) return "CSV must include a header row and at least one data row.";
   const headers = nonEmpty[0].map((value) => value.trim());
   if (headers.some((value) => !value) || new Set(headers).size !== headers.length) return "CSV headers must be non-empty and unique.";
+  if (nonEmpty.slice(1).some((values) => values.length > headers.length)) return "A CSV data row has more columns than the header row.";
   return { headers, rows: nonEmpty.slice(1).map((values) => {
     const padded = [...values];
     while (padded.length < headers.length) padded.push("");
