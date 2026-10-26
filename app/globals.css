@@ -2,45 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: light;
+  --jinox-ink: #10231f;
+  --jinox-muted: #65736f;
+  --jinox-line: #e3e9e6;
+  --jinox-canvas: #f6f8f7;
+  --jinox-primary: #0f5c50;
+  --jinox-primary-strong: #104b42;
+  --jinox-mint: #dff5ef;
+}
+
 @layer base {
   html, body {
     margin: 0;
+    min-height: 100%;
     padding: 0;
   }
+  html {
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+  }
   body {
-    overscroll-behavior: none;
+    background: var(--jinox-canvas);
+    color: var(--jinox-ink);
+    overscroll-behavior-y: contain;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button, input, select, textarea {
+    font: inherit;
+  }
+  button, a, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+  :focus-visible {
+    outline: 2px solid #0f766e;
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: #ccefe5;
+    color: #10231f;
   }
   main > :first-child {
-    margin-top: 0 !important;
+    margin-top: 0;
   }
-  main > :last-child {
-    margin-bottom: 0 !important;
-  }
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5d1 transparent;
 }
 
 ::-webkit-scrollbar {
-  display: none;
+  width: 8px;
+  height: 8px;
 }
-
-html {
-  scroll-behavior: smooth;
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #cbd5d1;
+  background-clip: padding-box;
 }
-
-body {
-  background-color: #f8f9ff;
-  color: #0b1c30;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .progress-fill-transition {
   transition: width 0.25s ease;
 }
-
 .bar-fill-transition {
   transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
 .ring-transition {
   transition: stroke-dashoffset 0.9s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
