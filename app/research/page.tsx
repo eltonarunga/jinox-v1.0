@@ -82,7 +82,7 @@ export default function ResearchWorkspacePage() {
         const [d, e, c] = await Promise.all([
           request(`/api/research/datasets?project_id=${encodeURIComponent(currentId)}`),
           request(`/api/research/experiments?project_id=${encodeURIComponent(currentId)}`),
-          request(`/api/research/governance/consents?project_id=${encodeURIComponent(currentId)}`).catch(() => []),
+          request(`/api/research/governance/consents?project_id=${encodeURIComponent(currentId)}`),
         ]);
         setDatasets(d ?? []); setExperiments(e ?? []); setConsents(c ?? []);
       } else { setDatasets([]); setExperiments([]); setConsents([]); }
