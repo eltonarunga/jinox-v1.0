@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { expectedMimeType, uploadTypes, validateUpload, type UploadModality } from "@/lib/validation/uploads";
-import { validateStructuredFile } from "@/lib/validation/structured-records";
+import { readStructuredFile, validateStructuredFile } from "@/lib/validation/structured-records";
 
 type CaseRecord = {
   id: string;
@@ -47,6 +47,10 @@ function label(value: string) {
 }
 function humanSize(bytes: number) {
   return bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+async function sha256(file: File): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 export default function DataIntakePage() {
@@ -153,14 +157,26 @@ export default function DataIntakePage() {
     const uploadCase = cases.find((item) => item.id === selectedCaseId);
     if (!uploadCase || !["obtained", "ethics_waiver"].includes(uploadCase.consent_status)) { setError("Uploads require a case with documented consent or an approved ethics waiver."); return; }
     if (!files.length) { setError("Choose at least one file."); return; }
+    const uploadCase = cases.find((item) => item.id === selectedCaseId);
+    if (!uploadCase) { setError("Selected case could not be found. Refresh and try again."); return; }
+    const structuredChecksums = new Map<File, string>();
     for (const file of files) {
       const validationError = validateUpload(file, modality);
       if (validationError) { setError(`${file.name}: ${validationError}`); return; }
-      const structuredError = await validateStructuredFile(file, modality, cases.map((item) => item.case_code));
+      const structuredError = await validateStructuredFile(file, modality, [uploadCase.case_code]);
       if (structuredError) { setError(`${file.name}: ${structuredError}`); return; }
+      if (modality === "clinical_record" || modality === "environmental_dataset") {
+        const checksum = await sha256(file);
+        const { data: duplicate, error: duplicateError } = await supabase.from("clinical_assets")
+          .select("id").eq("case_id", selectedCaseId).eq("checksum_sha256", checksum).maybeSingle();
+        if (duplicateError) { setError(duplicateError.message); return; }
+        if (duplicate) { setError(`${file.name}: this exact structured file has already been uploaded to this case.`); return; }
+        structuredChecksums.set(file, checksum);
+      }
     }
     setBusy(true);
     let succeeded = 0;
+    let importedClinicalRows = 0;
     const failures: string[] = [];
     for (let index = 0; index < files.length; index += 1) {
       const file = files[index];
@@ -174,7 +190,7 @@ export default function DataIntakePage() {
         upsert: false,
       });
       if (storageError) { failures.push(`${file.name}: ${storageError.message}`); continue; }
-      const { error: metadataError } = await supabase.from("clinical_assets").insert({
+      const { data: asset, error: metadataError } = await supabase.from("clinical_assets").insert({
         case_id: selectedCaseId,
         owner_id: userId,
         modality,
@@ -182,18 +198,45 @@ export default function DataIntakePage() {
         content_type: expectedMimeType(file),
         byte_size: file.size,
         storage_path: storagePath,
+        checksum_sha256: structuredChecksums.get(file) ?? null,
         metadata: { filename_redacted: true, client_extension: extension },
         status: "pending_review",
-      });
-      if (metadataError) {
+      }).select("id").single();
+      if (metadataError || !asset) {
         await supabase.storage.from("jinox-clinical-assets").remove([storagePath]);
-        failures.push(`${file.name}: file metadata could not be saved (${metadataError.message})`);
-      } else succeeded += 1;
+        failures.push(`${file.name}: file metadata could not be saved (${metadataError?.message ?? "missing asset record"}).`);
+      } else {
+        succeeded += 1;
+        if (modality === "clinical_record") {
+          const parsed = await readStructuredFile(file, modality);
+          if (parsed.error) {
+            failures.push(`${file.name}: source file is stored, but records were not imported (${parsed.error})`);
+          } else {
+            const observationsToInsert = parsed.records.map((record, rowIndex) => ({
+              case_id: selectedCaseId,
+              owner_id: userId,
+              category: String(record.category),
+              observation_code: String(record.observation_code).trim(),
+              finding: String(record.finding).trim(),
+              value_numeric: record.value_numeric === undefined || record.value_numeric === null || String(record.value_numeric).trim() === "" ? null : Number(record.value_numeric),
+              unit: record.unit === undefined || record.unit === null || String(record.unit).trim() === "" ? null : String(record.unit).trim(),
+              observed_on: String(record.observed_on),
+              source: record.source ? String(record.source) : "imported_record",
+              status: "unreviewed",
+              source_asset_id: asset.id,
+              source_row_number: rowIndex + 1,
+            }));
+            const { error: importError } = await supabase.from("clinical_observations").insert(observationsToInsert);
+            if (importError) failures.push(`${file.name}: source file is stored, but database row import failed (${importError.message})`);
+            else importedClinicalRows += observationsToInsert.length;
+          }
+        }
+      }
     }
     setBusy(false); setUploadProgress(""); setFiles([]); setUploadConsentConfirmed(false);
     await refreshCaseDetails(selectedCaseId);
-    if (failures.length) setError(`${succeeded} file(s) uploaded. ${failures.join(" | ")}`);
-    else setNotice(`${succeeded} file(s) uploaded successfully and queued for review. No AI analysis was run.`);
+    if (failures.length) setError(`${succeeded} file(s) stored. ${importedClinicalRows} clinical record row(s) imported. ${failures.join(" | ")}`);
+    else setNotice(`${succeeded} file(s) stored and queued for review; ${importedClinicalRows} clinical record row(s) imported. Environmental CSV/JSON is retained as a source file; enter individual measurements in Environmental Data. No AI analysis was run.`);
   }
 
   async function addObservation(event: FormEvent<HTMLFormElement>) {
@@ -312,7 +355,7 @@ export default function DataIntakePage() {
                 <a className={secondary} href="/templates/clinical-record-template.csv" download>Clinical CSV template</a>
                 <a className={secondary} href="/templates/environmental-data-template.csv" download>Environmental CSV template</a>
               </div>
-              <p className="mt-2 text-xs text-slate-500">Template files are examples. CSV/JSON files are checked against the expected structure in your browser before storage; automatic ingestion of each row into the database is not enabled yet.</p>
+              <p className="mt-2 text-xs text-slate-500">Clinical-record CSV/JSON rows are schema-checked and imported as unreviewed observations. Environmental CSV/JSON rows are validated and stored as source files; use the Environmental Data workspace to enter measurements. Validation currently runs in the browser.</p>
             </div>
           </section>
         </div>
