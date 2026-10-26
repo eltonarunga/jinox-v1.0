@@ -111,7 +111,7 @@ create policy "owners manage research experiments" on public.research_experiment
     exists (select 1 from public.research_projects p where p.id = project_id and p.owner_id = (select auth.uid()))
     and created_by = (select auth.uid())
     and (dataset_id is null or exists (
-      select 1 from public.research_datasets d where d.id = dataset_id and d.project_id = project_id
+      select 1 from public.research_datasets d where d.id = public.research_experiments.dataset_id and d.project_id = public.research_experiments.project_id
     ))
   );
 
