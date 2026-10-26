@@ -52,7 +52,7 @@ export async function validateStructuredFile(
   knownCaseCodes: string[],
 ): Promise<string | null> {
   if (modality !== "clinical_record" && modality !== "environmental_dataset") return null;
-  const text = await file.text();
+  const text = (await file.text()).replace(/^\uFEFF/, "");
   if (!text.trim()) return "Structured data file is empty.";
   let rows: Row[];
   if (file.name.toLowerCase().endsWith(".json")) {
