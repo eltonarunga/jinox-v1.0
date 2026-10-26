@@ -61,6 +61,7 @@ export default function DataIntakePage() {
   const [ageBand, setAgeBand] = useState("unknown");
   const [purpose, setPurpose] = useState("research");
   const [consentConfirmed, setConsentConfirmed] = useState(false);
+  const [consentBasis, setConsentBasis] = useState<"obtained" | "ethics_waiver">("obtained");
   const [modality, setModality] = useState<UploadModality>("intraoral_photo");
   const [files, setFiles] = useState<File[]>([]);
   const [category, setCategory] = useState<(typeof categories)[number]>("dental_caries");
@@ -133,7 +134,7 @@ export default function DataIntakePage() {
       county,
       age_band: ageBand === "unknown" ? null : ageBand,
       purpose,
-      consent_status: "obtained",
+      consent_status: consentBasis,
       consent_version: "jinox-intake-v1",
     }).select("id").single();
     setBusy(false);
@@ -148,6 +149,8 @@ export default function DataIntakePage() {
     setError(""); setNotice("");
     if (!supabase || !userId || !selectedCaseId) { setError("Create or select a case before uploading files."); return; }
     if (!consentConfirmed) { setError("Confirm the case has the required consent or ethics approval and contains no direct identifiers before uploading."); return; }
+    const uploadCase = cases.find((item) => item.id === selectedCaseId);
+    if (!uploadCase || !["obtained", "ethics_waiver"].includes(uploadCase.consent_status)) { setError("Uploads require a case with documented consent or an approved ethics waiver."); return; }
     if (!files.length) { setError("Choose at least one file."); return; }
     for (const file of files) {
       const validationError = validateUpload(file, modality);
@@ -257,6 +260,11 @@ export default function DataIntakePage() {
               <label className="block text-sm font-medium">Intended use
                 <select className={field} value={purpose} onChange={(event) => setPurpose(event.target.value)}>
                   <option value="research">Research</option><option value="clinical_review">Clinician review</option><option value="quality_improvement">Quality improvement</option>
+                </select>
+              </label>
+              <label className="block text-sm font-medium">Documented consent basis
+                <select className={field} value={consentBasis} onChange={(event) => setConsentBasis(event.target.value as "obtained" | "ethics_waiver")}>
+                  <option value="obtained">Informed consent obtained</option><option value="ethics_waiver">Approved ethics waiver</option>
                 </select>
               </label>
               <label className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 text-sm leading-5 text-slate-700">
