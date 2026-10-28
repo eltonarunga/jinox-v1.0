@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getResearchContext, isResearchContext, jsonError } from "@/lib/research-auth";
+import { readJsonBody } from "@/lib/api/read-json";
 import { parseRegisterDatasetInput } from "@/lib/domains/datasets/validation";
 
 const DATASET_FIELDS =
@@ -27,12 +28,9 @@ export async function POST(request: NextRequest) {
   const context = await getResearchContext(request);
   if (!isResearchContext(context)) return context;
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return jsonError("Request body must be valid JSON.", 400);
-  }
+  const bodyResult = await readJsonBody(request);
+  if (!bodyResult.success) return jsonError("Request body must be valid JSON.", 400);
+  const body = bodyResult.value;
 
   const parsed = parseRegisterDatasetInput(body);
   if (!parsed.success) return jsonError(parsed.error, 400);
