@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "test:unit": "node --experimental-strip-types --test tests/unit"
+    "test:unit": "node --experimental-strip-types --test tests/unit/dataset-validation.test.mjs tests/unit/project-validation.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
