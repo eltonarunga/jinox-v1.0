@@ -23,3 +23,16 @@ The message `Could not find the table 'public.clinical_cases' in the schema cach
 4. Verify the deployed app's `NEXT_PUBLIC_SUPABASE_URL` points at the same project. Do not paste service-role keys into the browser or source code.
 
 Do not make clinical data production-ready until migrations, RLS policies, private storage policies, backup/retention and governance are verified.
+
+
+## Bootstrap the first administrator
+
+New users intentionally default to `member`, and no account can promote itself. After applying the migration, a trusted project owner must promote the first administrator once from the Supabase SQL Editor, using the exact email already registered through Google OAuth:
+
+```sql
+update public.profiles
+set role = 'admin', updated_at = now()
+where lower(email) = lower('the-exact-google-account-email@example.com');
+```
+
+Replace the example email before running the statement. Check that exactly one row was updated. This database-operator bootstrap is allowed because SQL Editor execution has no end-user `auth.uid()`; normal application requests still require an existing admin. Do not expose service-role credentials in the app.
