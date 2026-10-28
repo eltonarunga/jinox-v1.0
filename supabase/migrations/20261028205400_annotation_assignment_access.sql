@@ -255,7 +255,15 @@ drop policy if exists "annotators can update own dataset annotations" on public.
 create policy "annotators and reviewers can read annotations"
 on public.dataset_annotations for select to authenticated
 using (
-  annotator_id = (select auth.uid())
+  (
+    annotator_id = (select auth.uid())
+    and exists (
+      select 1 from public.dataset_items i
+      join public.research_datasets d on d.id = i.dataset_id
+      where i.id = dataset_annotations.dataset_item_id
+        and public.research_is_project_member(d.project_id)
+    )
+  )
   or exists (
     select 1 from public.dataset_items i
     join public.research_datasets d on d.id = i.dataset_id
@@ -339,5 +347,6 @@ with check (
 );
 
 grant select, insert on public.dataset_items to authenticated;
-grant select, insert, update on public.dataset_annotations to authenticated;
+revoke update on public.dataset_annotations from authenticated;
+grant update (labels, notes, status) on public.dataset_annotations to authenticated;
 grant select, insert on public.annotation_reviews to authenticated;
