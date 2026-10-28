@@ -1,46 +1,45 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getPublicSupabaseConfig } from "@/lib/supabase/public-config";
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request });
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll(); },
-        setAll(cookiesToSet: Array<{
-          name: string;
-          value: string;
-          options: {
-            domain?: string;
-            path?: string;
-            expires?: Date;
-            httpOnly?: boolean;
-            maxAge?: number;
-            sameSite?: boolean | "lax" | "strict" | "none";
-            secure?: boolean;
-            priority?: "low" | "medium" | "high";
-            partitioned?: boolean;
-          };
-        }>) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
-      },
-    }
-  );
+  const config = getPublicSupabaseConfig();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  const isLogin = request.nextUrl.pathname === "/login";
-  const isAuthCallback = request.nextUrl.pathname.startsWith("/auth/callback");
+  // Let the app render its configuration guidance instead of throwing during
+  // local development or an incorrectly configured preview deployment.
+  // Protected data endpoints independently validate the caller and fail closed.
+  if (!config) return NextResponse.next();
+
+  let response = NextResponse.next({ request });
+  const supabase = createServerClient(config.url, config.anonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
+      },
+    },
+  });
+
+  const { data: { user }, error } = await supabase.auth.getUser();
+  const pathname = request.nextUrl.pathname;
+  const isLogin = pathname === "/login";
+  const isAuthCallback = pathname.startsWith("/auth/callback");
+
+  // Do not redirect to login on transient auth service failures. Protected
+  // APIs still enforce authorization; the UI can recover from the auth error.
+  if (error) return response;
 
   if (!user && !isLogin && !isAuthCallback) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.search = "";
-    loginUrl.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
+    loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -54,7 +53,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Exclude static files, images, AND all /api/* routes from the auth middleware
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],

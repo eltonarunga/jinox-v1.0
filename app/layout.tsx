@@ -23,22 +23,22 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "JinoX AI — Clinical Workstation & Multimodal Platform",
+  title: "JinoX AI — Dental Data & Annotation Platform",
   description:
-    "Full-stack multimodal AI platform fusing intraoral imaging, environmental groundwater fluoride telemetry, and craniofacial genomics for the Kenya pilot.",
+    "Research data infrastructure for ethically governed East African oral-health datasets, expert annotation, quality review and dataset delivery.",
   authors: [{ name: "JinoX AI Project Team" }],
   keywords: [
     "JinoX AI",
-    "Clinical Workstation",
-    "Fluorosis Surveillance",
-    "Multimodal AI",
-    "Kenya Rift Valley",
-    "Digital Twin",
-    "Edge Diagnostics",
+    "Dental datasets",
+    "Oral-health research",
+    "Clinical data annotation",
+    "East African health AI",
+    "Dataset quality",
   ],
   openGraph: {
-    title: "JinoX AI — Clinical Workstation",
-    description: "Multimodal AI diagnostics and climate-health intelligence for endemic fluorosis.",
+    title: "JinoX AI — Dental Data & Annotation Platform",
+    description:
+      "Collect, curate, annotate and deliver trusted oral-health research datasets.",
     type: "website",
     locale: "en_KE",
   },
@@ -50,15 +50,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${plusJakartaSans.variable} ${inter.variable}`}
-    >
+    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`}>
       <head>
-        {/* Preconnect to Google Fonts — non-render-blocking */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Material Symbols loaded with display=block to avoid layout shift */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
