@@ -33,29 +33,15 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return jsonError(parsed.error, 400);
 
   const input = parsed.data;
-  const { data, error } = await context.supabase
-    .from("research_projects")
-    .insert({
-      name: input.name,
-      description: input.description,
-      research_area: input.researchArea,
-      owner_id: context.userId,
-    })
-    .select(PROJECT_FIELDS)
-    .single();
-
-  if (error) return jsonError("Could not create research project.", 400);
-
-  // Keep the existing audit behavior unchanged in this refactor.
-  // Atomic write + audit should be handled separately with a transactional DB function/outbox.
-  await context.supabase.from("research_audit_logs").insert({
-    project_id: data.id,
-    actor_id: context.userId,
-    action: "project.created",
-    resource_type: "research_project",
-    resource_id: data.id,
-    details: { research_area: input.researchArea },
+  const { data, error } = await context.supabase.rpc("create_research_project_with_audit", {
+    p_name: input.name,
+    p_description: input.description,
+    p_research_area: input.researchArea,
   });
+
+  if (error || !data || typeof data !== "object" || Array.isArray(data)) {
+    return jsonError("Could not create research project. Check permissions and field values.", 400);
+  }
 
   return NextResponse.json(
     { data },
