@@ -31,13 +31,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const county = typeof body.county === "string" && body.county.trim().length > 0
-      ? body.county.trim()
+    const payload = body as Record<string, unknown>;
+    const county = typeof payload.county === "string" && payload.county.trim().length > 0
+      ? payload.county.trim()
       : "Nakuru";
 
     let patientAge: number | undefined;
-    if (body.patientAge !== undefined && body.patientAge !== null) {
-      const ageNum = Number(body.patientAge);
+    if (payload.patientAge !== undefined && payload.patientAge !== null) {
+      const ageNum = Number(payload.patientAge);
       if (isNaN(ageNum) || ageNum < 0 || ageNum > 125) {
         return NextResponse.json(
           {
@@ -53,8 +54,8 @@ export async function POST(req: NextRequest) {
     }
 
     let imagingSignal: number | undefined;
-    if (body.imagingSignal !== undefined && body.imagingSignal !== null) {
-      const imgNum = Number(body.imagingSignal);
+    if (payload.imagingSignal !== undefined && payload.imagingSignal !== null) {
+      const imgNum = Number(payload.imagingSignal);
       if (isNaN(imgNum) || imgNum < 0 || imgNum > 100) {
         return NextResponse.json(
           {
@@ -70,8 +71,8 @@ export async function POST(req: NextRequest) {
     }
 
     let geneticSignal: number | undefined;
-    if (body.geneticSignal !== undefined && body.geneticSignal !== null) {
-      const genNum = Number(body.geneticSignal);
+    if (payload.geneticSignal !== undefined && payload.geneticSignal !== null) {
+      const genNum = Number(payload.geneticSignal);
       if (isNaN(genNum) || genNum < 0 || genNum > 100) {
         return NextResponse.json(
           {
