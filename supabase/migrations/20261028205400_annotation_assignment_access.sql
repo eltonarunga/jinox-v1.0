@@ -296,8 +296,10 @@ using (
   and status = 'draft'
   and exists (
     select 1 from public.dataset_items i
+    join public.research_datasets d on d.id = i.dataset_id
     where i.id = dataset_annotations.dataset_item_id
       and i.assigned_to = (select auth.uid())
+      and public.research_current_user_has_project_role(d.project_id, array['researcher']::text[])
   )
 )
 with check (
@@ -305,8 +307,10 @@ with check (
   and status in ('draft','submitted')
   and exists (
     select 1 from public.dataset_items i
+    join public.research_datasets d on d.id = i.dataset_id
     where i.id = dataset_annotations.dataset_item_id
       and i.assigned_to = (select auth.uid())
+      and public.research_current_user_has_project_role(d.project_id, array['researcher']::text[])
   )
 );
 
