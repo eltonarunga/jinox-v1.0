@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getResearchContext, isResearchContext, jsonError } from '@/lib/research-auth';
+import { readJsonBody } from "@/lib/api/read-json";
 
 const STATUSES = new Set(['pending','granted','withdrawn','not_required']);
 const LANGUAGES = new Set(['en','sw','other']);
@@ -19,8 +20,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const context = await getResearchContext(request);
   if (!isResearchContext(context)) return context;
-  let body: unknown;
-  try { body = await request.json(); } catch { return jsonError('Request body must be valid JSON.', 400); }
+  const bodyResult = await readJsonBody(request);
+  if (!bodyResult.success) return jsonError("Request body must be valid JSON.", 400);
+  const body = bodyResult.value;
   if (!body || typeof body !== 'object' || Array.isArray(body)) return jsonError('Expected a JSON object.', 400);
   const input = body as Record<string, unknown>;
   const projectId = typeof input.project_id === 'string' ? input.project_id : '';
