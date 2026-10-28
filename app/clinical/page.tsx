@@ -18,9 +18,13 @@ export default function ClinicalWorkspacePage() {
             <span className="rounded-md bg-black px-3.5 py-2.5 text-sm font-bold tracking-tight text-white">JinoX AI</span>
             <span className="text-xs font-semibold uppercase tracking-[.16em] text-slate-500">Clinical workspace</span>
           </Link>
-          <Link href="/research" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2">
-            Research workspace <span aria-hidden="true">→</span>
-          </Link>
+          <nav className="flex flex-wrap items-center gap-2" aria-label="Account navigation">
+            <Link href="/profile" className="inline-flex min-h-10 items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">My profile</Link>
+            <Link href="/admin" className="inline-flex min-h-10 items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Admin</Link>
+            <Link href="/research" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2">
+              Research workspace <span aria-hidden="true">→</span>
+            </Link>
+          </nav>
         </header>
 
         <section className="py-10 sm:py-12">
