@@ -76,6 +76,7 @@ set search_path = ''
 as $$
 begin
   if new.role is distinct from old.role
+     and (select auth.uid()) is not null
      and coalesce(public.current_profile_role(), '') <> 'admin' then
     raise exception 'Only an administrator can change user access levels';
   end if;
