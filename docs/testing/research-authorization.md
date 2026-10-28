@@ -1,12 +1,12 @@
 # Research authorization integration tests
 
-These tests intentionally run only against a dedicated **staging** Supabase project with synthetic metadata. Never point them at production patient data.
+These tests are intended for a dedicated **staging** Supabase project containing only synthetic test metadata and assets. Never point them at production patient data.
 
 ## Prerequisites
 
-Apply and verify the research workspace and annotation-access migrations in staging first. Create separate staging identities with owner, researcher, reviewer, viewer and unrelated-user roles. Give each collaborator membership only in the designated test project. Create one synthetic dataset in that project.
+Apply and verify the research workspace and annotation-access migrations in staging first. Create separate staging identities with owner, researcher, reviewer, viewer and unrelated-user roles. Give each collaborator membership only in the designated test project. Seed one synthetic dataset, one item assigned to the researcher, one submitted annotation by that researcher, and one draft annotation. Use test-only clinical asset references.
 
-Configure the following environment variables in the test runner:
+Configure these environment variables in the test runner:
 
 - `JINOX_TEST_SUPABASE_URL`
 - `JINOX_TEST_SUPABASE_ANON_KEY`
@@ -17,6 +17,9 @@ Configure the following environment variables in the test runner:
 - `JINOX_TEST_REVIEWER_TOKEN`
 - `JINOX_TEST_VIEWER_TOKEN`
 - `JINOX_TEST_UNRELATED_TOKEN`
+- `JINOX_TEST_ASSIGNED_ITEM_ID`
+- `JINOX_TEST_SUBMITTED_ANNOTATION_ID`
+- `JINOX_TEST_DRAFT_ANNOTATION_ID`
 
 Use short-lived access tokens from dedicated test users. Do not commit tokens or add them to ordinary CI logs.
 
@@ -26,4 +29,6 @@ Run with:
 node --experimental-strip-types --test tests/integration/research-access.test.mjs
 ```
 
-If staging variables are absent, the suite skips explicitly; a skipped suite is **not** evidence that RLS is correct. The current automated assertions cover project/dataset metadata visibility. Before production rollout, also verify assignment writes, annotation visibility and edits, reviewer separation (no self-review), audit-write atomicity, and private Storage access using separate role identities. Keep the annotation migration out of production until those checks pass.
+Tests skip explicitly when required variables are absent. A skipped suite is **not** evidence that RLS is correct. The suite checks project/dataset metadata visibility, assignment-scoped item access, reviewer visibility of submitted annotations, and a negative self-review attempt that must be rejected by RLS.
+
+Before production rollout, separately verify successful assignment and annotation writes, role changes, audit transaction rollback on audit failure, and private Storage access using distinct role identities. Keep the annotation-access migration out of production until those checks pass.
