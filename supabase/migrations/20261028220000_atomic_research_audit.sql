@@ -184,3 +184,11 @@ $$;
 
 revoke all on function public.record_research_consent_with_audit(uuid, text, text, text, text, timestamptz, timestamptz) from public, anon;
 grant execute on function public.record_research_consent_with_audit(uuid, text, text, text, text, timestamptz, timestamptz) to authenticated;
+
+
+-- Tighten execution privileges on pre-existing profile helper/trigger functions.
+-- Trigger functions remain callable by their triggers; they should not be public RPC endpoints.
+revoke execute on function public.current_profile_role() from anon;
+grant execute on function public.current_profile_role() to authenticated;
+revoke execute on function public.handle_new_user_profile() from public, anon, authenticated;
+revoke execute on function public.protect_profile_role_changes() from public, anon, authenticated;
