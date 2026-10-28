@@ -71,7 +71,8 @@ export default function ResearchProjectsPage() {
 
   async function createProject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSaving(true); setError(""); setNotice("");
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     try {
       const created: Project = await request("/api/research/projects", {
         method: "POST",
@@ -82,7 +83,7 @@ export default function ResearchProjectsPage() {
         }),
       });
       setProjects((current) => [created, ...current.filter((p) => p.id !== created.id)]);
-      event.currentTarget.reset();
+      formElement.reset();
       setNotice("Project created. Governance and access requirements should be completed before data intake.");
     } catch (e) { setError(e instanceof Error ? e.message : "Could not create project."); }
     finally { setSaving(false); }
