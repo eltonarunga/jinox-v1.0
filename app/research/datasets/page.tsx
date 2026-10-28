@@ -2,7 +2,6 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
@@ -12,8 +11,7 @@ const modalities = ["panoramic_xray", "periapical_xray", "bitewing_xray", "cbct"
 const inputClass = "mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/15";
 
 export default function ResearchDatasetsPage() {
-  const searchParams = useSearchParams();
-  const initialProjectId = searchParams.get("project_id") ?? "";
+  const [initialProjectId, setInitialProjectId] = useState("");
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -23,6 +21,10 @@ export default function ResearchDatasetsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    setInitialProjectId(new URLSearchParams(window.location.search).get("project_id") ?? "");
+  }, []);
 
   useEffect(() => {
     const client = getSupabaseBrowserClient();
@@ -41,7 +43,7 @@ export default function ResearchDatasetsPage() {
     return body.data;
   }, [session]);
 
-  const load = useCallback(async (selectedId = projectId) => {
+  const load = useCallback(async (selectedId: string) => {
     if (!session) return;
     setLoading(true); setError("");
     try {
@@ -53,13 +55,14 @@ export default function ResearchDatasetsPage() {
       setDatasets(nextDatasets ?? []);
     } catch (e) { setError(e instanceof Error ? e.message : "Could not load datasets."); }
     finally { setLoading(false); }
-  }, [request, session, projectId]);
+  }, [request, session]);
 
   useEffect(() => { if (session) void load(initialProjectId); else if (authReady) setLoading(false); }, [session, authReady, initialProjectId, load]);
 
   async function registerDataset(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSaving(true); setError(""); setNotice("");
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const rawCount = String(form.get("record_count") ?? "").trim();
     try {
       const created: Dataset = await request("/api/research/datasets", {
@@ -76,7 +79,7 @@ export default function ResearchDatasetsPage() {
         }),
       });
       setDatasets((current) => [created, ...current.filter((d) => d.id !== created.id)]);
-      event.currentTarget.reset();
+      formElement.reset();
       setNotice("Dataset metadata registered. This does not upload files or authorize data sharing.");
     } catch (e) { setError(e instanceof Error ? e.message : "Could not register dataset."); }
     finally { setSaving(false); }
