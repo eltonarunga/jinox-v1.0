@@ -19,7 +19,7 @@ export async function getResearchContext(
   request: NextRequest
 ): Promise<ResearchContext | NextResponse> {
   const authorization = request.headers.get("authorization");
-    const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
+  const token = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
   if (!token) return jsonError("Missing bearer access token.", 401);
 
   const config = getPublicSupabaseConfig();
