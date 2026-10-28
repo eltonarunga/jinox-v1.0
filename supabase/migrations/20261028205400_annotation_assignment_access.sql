@@ -156,6 +156,28 @@ create index if not exists idx_dataset_items_assignee_status
   on public.dataset_items(assigned_to, status, created_at)
   where assigned_to is not null;
 
+create or replace function public.research_set_dataset_item_timestamps()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+begin
+  if tg_op = 'INSERT' then
+    new.assigned_at := case when new.assigned_to is null then null else now() end;
+  elsif new.assigned_to is distinct from old.assigned_to then
+    new.assigned_at := case when new.assigned_to is null then null else now() end;
+  end if;
+  new.updated_at := now();
+  return new;
+end;
+$;
+
+revoke all on function public.research_set_dataset_item_timestamps() from public, anon, authenticated;
+drop trigger if exists research_set_dataset_item_timestamps on public.dataset_items;
+create trigger research_set_dataset_item_timestamps
+before insert or update on public.dataset_items
+for each row execute function public.research_set_dataset_item_timestamps();
+
 drop policy if exists "dataset owners can read dataset items" on public.dataset_items;
 drop policy if exists "dataset owners can add own assets" on public.dataset_items;
 drop policy if exists "dataset owners can update dataset items" on public.dataset_items;
@@ -246,7 +268,7 @@ with check (
 -- Restrict column-level writes so authenticated users cannot move an item to another dataset
 -- or swap the underlying clinical asset after insertion.
 revoke update on public.dataset_items from authenticated;
-grant update (assigned_to, assigned_at, status) on public.dataset_items to authenticated;
+grant update (assigned_to, status) on public.dataset_items to authenticated;
 
 drop policy if exists "annotators can read dataset annotations" on public.dataset_annotations;
 drop policy if exists "annotators can create dataset annotations" on public.dataset_annotations;
