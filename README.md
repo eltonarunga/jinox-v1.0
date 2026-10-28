@@ -1,192 +1,65 @@
-# JinoX AI — Full-Stack Multimodal Health Platform
+# JinoX AI
 
-[![CI Pipeline](https://github.com/jinox-ai/jinox-fullstack/actions/workflows/ci.yml/badge.svg)](https://github.com/jinox-ai/jinox-fullstack/actions/workflows/ci.yml)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-14.2-black.svg)](https://nextjs.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC.svg)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-CC--BY--NC--SA--4.0-green.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+**JinoX AI is building data infrastructure for East African oral-health AI.** The platform is designed to help authorized data partners collect and curate dental research data, coordinate qualified annotators, review label quality, preserve dataset provenance, and deliver versioned datasets to researchers and AI developers.
 
-Enterprise-grade, full-stack prototype of the **JinoX AI** platform for the **Google.org Impact Challenge: AI for Science** proposal. Designed for the Kenya pilot, JinoX AI unites intraoral computer vision, environmental groundwater fluoride surveillance, and craniofacial genomics to detect, monitor, and simulate endemic dental fluorosis across the East African Rift Valley.
+JinoX is a research data operations platform, not a validated clinical decision-support product. Any future clinical AI functionality requires separate validation, governance and appropriate regulatory review.
 
----
+## Product workflow
 
-## System Architecture
+1. **Create a research project** with its purpose, access rules and governance requirements.
+2. **Register a dataset** with a modality, collection source, inclusion criteria and label schema.
+3. **Collect and curate assets** with permission records, pseudonymous identifiers, metadata and provenance.
+4. **Annotate** using qualified contributors and documented guidelines.
+5. **Review and adjudicate** disagreements with independent reviewers and task-specific quality thresholds.
+6. **Release a dataset version** with a manifest, label dictionary, quality report, limitations and permitted-use terms.
 
-```mermaid
-graph TD
-    A[Community Health Promoter / Field Tablet] -->|Intraoral Image| B[Layer 5: Edge Diagnostics]
-    C[WRMA Water Surveillance Telemetry] -->|Groundwater Fluoride ppm| D[Layer 6: Climate-Health GIS]
-    E[Craniofacial Genomics Registry] -->|Amelogenin Susceptibility| F[Multimodal Risk Engine]
-    B --> F
-    D --> F
-    F -->|Fused Inference| G[Clinical Referral Queue & Action Plan]
-    F -->|Biomechanical Inputs| H[Layer 3: Digital Twin Simulation]
-    F -->|Anonymized Telemetry| I[Layer 1-2: Supabase / Postgres DB]
-    I --> J[Public Research API & Dashboard]
-```
+## Technology stack
 
-### Proposal Alignment
+- **Application:** Next.js App Router, React and TypeScript
+- **UI:** Tailwind CSS and reusable accessible components
+- **Identity:** Supabase Auth
+- **Database:** Supabase Postgres with Row Level Security (RLS)
+- **File storage:** private Supabase Storage buckets with short-lived signed URLs
+- **Deployment:** Vercel and GitHub Actions
+- **Architecture:** modular monolith; domain services and thin route handlers, with managed infrastructure until scale justifies additional services
 
-| Layer | Module Name | Platform Component | Backed By |
-|---|---|---|---|
-| **Layer 5** | Low-Resource AI Diagnostics | `ScreeningPanel.tsx` | `POST /api/risk/predict` |
-| **Layer 6** | Climate-Health Intelligence | `FluorosisPanel.tsx` | `GET /api/counties`, `GET /api/environment/fluoride` |
-| **Layer 3** | Digital Twin Simulation Engine | `TwinPanel.tsx` | Thylstrup-Fejerskov Index (TFI) client engine |
-| **Layers 1–2** | Dataset & Foundational Model | `ApiExplorerPanel.tsx` | `GET /api/dataset/summary`, `GET /api/model/performance` |
-| **Governance** | Program Milestone Dashboard | `DashboardPanel.tsx` | 18-Month Target Projections (`lib/data.ts`) |
+See [the architecture guide](docs/architecture/README.md) and [incremental refactor plan](docs/architecture/refactor-plan.md).
 
----
+## Local development
 
-## Key Features
-
-- **Hybrid Data Architecture**: The application operates out of the box using calibrated, seeded epidemiological data from Kenya's Rift Valley. When Supabase credentials are provided, it seamlessly switches to live PostgreSQL queries with automatic failover.
-- **Multimodal Risk Fusion**: Fuses 45% visual enamel feature extraction, 35% environmental groundwater exposure, and 20% genomic markers, mapped to WHO Dean's Fluorosis Index and the Thylstrup-Fejerskov Index (TFI).
-- **Accessible & Responsive UX**: WAI-ARIA compliant tabs, keyboard navigation, full image drag-and-drop / file upload simulation, latency timers, and JSON report export.
-- **Production-Grade Security**: Strict input validation, RFC-compliant error responses, CSP/X-Frame-Options security headers, and non-root Docker execution.
-
----
-
-## Quick Start
-
-### Prerequisites
-
-- Node.js 18.17+ or 20.x
-- npm 9+ or pnpm / yarn
-
-### Installation
+Requirements: Node.js 20+ and npm.
 
 ```bash
-# Clone repository
-git clone https://github.com/<your-org>/jinox-fullstack.git
-cd jinox-fullstack
-
-# Install dependencies
+git clone https://github.com/eltonarunga/jinox-v1.0.git
+cd jinox-v1.0
 npm install
-
-# Start development server
+cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser.
+Configure the public Supabase project URL and publishable/anon key in `.env.local` for authenticated data workflows. Never expose `SUPABASE_SERVICE_ROLE_KEY` to browser code or any `NEXT_PUBLIC_*` variable.
 
-### Quality & Verification Scripts
+## Quality checks
 
 ```bash
-# Static type checking
 npm run type-check
-
-# ESLint audit
 npm run lint
-
-# Production build test
 npm run build
 ```
 
----
+The repository CI runs these checks for pushes and pull requests. The package manifest and lockfile should be kept synchronized; until the lockfile is reconciled with all declared dependencies, CI uses `npm install` rather than `npm ci`.
 
-## Environment & Supabase Setup
+## Security and data governance
 
-The application works completely offline or without credentials using seeded data. To enable live persistence:
+- Use only data with an appropriate legal basis, consent or other applicable authorization and ethics approval where required.
+- Treat dental records and related metadata as sensitive health data.
+- Keep source assets private by default; authorize every access and use short-lived signed URLs.
+- Enforce access through server-side authorization and PostgreSQL RLS, not UI checks alone.
+- Keep provenance, annotation revisions, reviewer decisions and export events auditable.
+- Do not place patient identifiers or source clinical data in logs, analytics, screenshots or test fixtures.
+- Pseudonymized data is not automatically anonymous.
+- Dataset releases must document their permitted purposes, limitations and applicable access terms.
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Execute the schema migration in the Supabase SQL Editor:
-   ```bash
-   cat supabase/schema.sql
-   ```
-3. Create `.env.local` based on `.env.example`:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=https://<your-project-id>.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
-   SUPABASE_SERVICE_ROLE_KEY=<optional-service-role-key-for-write-audit>
-   ```
-4. Restart the server. The platform will automatically query Supabase tables and append `X-Data-Source: supabase` to API responses.
+## Current scope and roadmap
 
----
-
-## Deployment Options
-
-### Option 1: Vercel (Recommended)
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
-
-1. Push your code to GitHub.
-2. Import the repository in the Vercel Dashboard.
-3. Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` under Project Settings &gt; Environment Variables.
-4. Click **Deploy**.
-
-### Option 2: Docker Container
-
-A multi-stage, hardened Dockerfile is included:
-
-```bash
-# Build production image
-docker build -t jinox-ai:latest .
-
-# Run container on port 3000
-docker run -d -p 3000:3000 --name jinox-prototype jinox-ai:latest
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
----
-
-## API Specification
-
-### `GET /api/counties`
-Returns the list of monitored counties, mean fluoride concentrations (ppm), risk classification, and screening rollups.
-
-### `GET /api/environment/fluoride?county={name}`
-Returns hydrogeological telemetry for a specific county compared to WHO 1.5 ppm guidelines.
-
-### `GET /api/dataset/summary`
-Returns multimodal registry scale (records, modalities, counties covered, and academic license).
-
-### `GET /api/model/performance`
-Returns foundational diagnostic model validation metrics (AUC, sensitivity, specificity, fairness subgroup audits).
-
-### `POST /api/risk/predict`
-Calculates calibrated multimodal fluorosis risk from demographic, visual, environmental, and genomic signals.
-
-**Request Payload:**
-```json
-{
-  "county": "Nakuru",
-  "patientAge": 34,
-  "imagingSignal": 72,
-  "geneticSignal": 45
-}
-```
-
-**Response Payload:**
-```json
-{
-  "input": {
-    "county": "Nakuru",
-    "patient_age": 34,
-    "modalities_used": ["imaging", "environmental", "genomic"],
-    "timestamp": "2026-09-18T18:30:00.000Z"
-  },
-  "output": {
-    "imaging_signal": 72,
-    "environmental_signal": 60,
-    "genetic_signal": 45,
-    "fused_fluorosis_risk": 62,
-    "tier": "mod",
-    "recommendation": "Moderate fluorosis risk signal. Recommend dietary fluoride review, water testing, preventive dietary counseling, and follow-up screening within 6 months.",
-    "clinical_staging": {
-      "deans_index": "Moderate",
-      "tfi_score": 5,
-      "description": "Pronounced opaque white striations with localized brown staining and micro-pitting."
-    }
-  }
-}
-```
-
----
-
-## Clinical & Ethical Disclaimer
-
-> [!CAUTION]
-> **Not for Direct Diagnostic Use**: JinoX AI is a research and clinical decision-support prototype. It is not an approved medical device and does not replace evaluation by a qualified dental surgeon or clinical practitioner.
->
-> **Privacy by Design**: No patient Personally Identifiable Information (PII) is stored or transmitted. In the Supabase schema, the `screenings` table has no public read policy, ensuring data captured at community health clinics is safeguarded under Kenyan Data Protection Act (2019) regulations.
+The current implementation is an evolving prototype. The near-term priorities are reliable intake, dataset registration, annotation workflows, reviewer/adjudication operations, access-control tests and reproducible dataset exports. AI-assisted pre-labeling, benchmarking APIs and enterprise data services should follow once the human-reviewed data pipeline is reliable.
