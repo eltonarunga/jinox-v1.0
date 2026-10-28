@@ -107,8 +107,7 @@ export default function AnnotatePage() {
     setNotice("Asset added to dataset queue."); await refresh(datasetId);
   }
 
-  async function saveAnnotation(event: FormEvent<HTMLFormElement>, submit: boolean) {
-    event.preventDefault();
+  async function saveAnnotation(submit: boolean) {
     if (!supabase || !userId || !selectedItemId) { setError("Select a dataset item first."); return; }
     setBusy(true); setError(""); setNotice("");
     const latestRevision = annotations.filter(a => a.dataset_item_id === selectedItemId).reduce((max, a) => Math.max(max, a.revision), 0);
@@ -161,13 +160,13 @@ export default function AnnotatePage() {
               {signedUrl ? <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2"><img src={signedUrl} alt="Private source asset preview" className="max-h-[620px] w-full object-contain" /></div> : <div className="mt-4 flex min-h-56 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">Preview is unavailable for this file type. The private source file remains linked to this item.</div>}
               <p className="mt-3 text-xs text-slate-500">Preview URL expires after five minutes. Non-image files may not render in the browser.</p>
             </div>
-            <form className="space-y-4" onSubmit={e => void saveAnnotation(e, false)}>
+            <form className="space-y-4" onSubmit={e => { e.preventDefault(); void saveAnnotation(false); }}>
               <div><p className="text-xs font-bold uppercase tracking-wider text-slate-500">Annotation schema · oral-health-v1</p><h2 className="mt-1 text-lg font-semibold">Label this asset</h2><p className="mt-1 text-sm text-slate-500">Record a research label, not an automated clinical conclusion.</p></div>
               <label className="block text-sm font-medium">Primary label<select className={field} value={labelValue} onChange={e => setLabelValue(e.target.value)}><option value="unreviewed">Unreviewed / uncertain</option><option value="caries_present">Caries present</option><option value="caries_absent">Caries absent</option><option value="fluorosis_present">Fluorosis present</option><option value="fluorosis_absent">Fluorosis absent</option><option value="periodontal_findings">Periodontal findings</option><option value="oral_mucosal_finding">Oral mucosal finding</option><option value="not_assessable">Not assessable</option><option value="other">Other</option></select></label>
               <label className="block text-sm font-medium">Structured finding<textarea className={field} rows={4} maxLength={3000} value={finding} onChange={e => setFinding(e.target.value)} placeholder="Describe visible findings, region, uncertainty, or annotation rationale." /></label>
               <label className="block text-sm font-medium">Annotator notes<textarea className={field} rows={3} maxLength={5000} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional context; do not include direct identifiers." /></label>
               {currentAnnotation && <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">Latest saved revision: {currentAnnotation.revision} · {currentAnnotation.status}</p>}
-              <div className="flex flex-wrap gap-2"><button className={button} type="submit" disabled={busy}>{busy ? "Saving…" : "Save draft"}</button><button className={secondary} type="button" disabled={busy} onClick={e => { const form = e.currentTarget.form; if (form) void saveAnnotation({ preventDefault: () => {} } as FormEvent<HTMLFormElement>, true); }}>Submit for review</button></div>
+              <div className="flex flex-wrap gap-2"><button className={button} type="submit" disabled={busy}>{busy ? "Saving…" : "Save draft"}</button><button className={secondary} type="button" disabled={busy} onClick={() => void saveAnnotation(true)}>Submit for review</button></div>
               <div className="border-t border-slate-100 pt-4"><p className="text-xs leading-5 text-slate-500">Submitting records your annotation for review; it does not independently validate the label. Do not upload identifiable clinical material. Use data covered by the documented consent or ethics basis.</p></div>
             </form>
           </div>}
