@@ -292,7 +292,10 @@ using (
     where i.id = dataset_annotations.dataset_item_id
       and (
         public.research_can_manage_project(d.project_id)
-        or public.research_current_user_has_project_role(d.project_id, array['reviewer']::text[])
+        or (
+          public.research_current_user_has_project_role(d.project_id, array['reviewer']::text[])
+          and dataset_annotations.status = 'submitted'
+        )
       )
   )
 );
