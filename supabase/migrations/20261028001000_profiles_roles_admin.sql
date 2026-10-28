@@ -55,7 +55,7 @@ $$;
 
 drop trigger if exists on_auth_user_created_profile on auth.users;
 create trigger on_auth_user_created_profile
-  after insert or update of email, raw_user_meta_data on auth.users
+  after insert or update on auth.users
   for each row execute function public.handle_new_user_profile();
 
 -- Backfill accounts that existed before this migration.
