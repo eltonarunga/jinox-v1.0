@@ -14,6 +14,7 @@ function LoginPageContent() {
     setError("");
     try {
       const supabase = getSupabaseBrowserClient();
+      if (!supabase) throw new Error("Supabase is not configured. Please contact the platform administrator.");
       const callbackUrl = new URL("/auth/callback", window.location.origin);
       const requestedNext = new URL(window.location.href).searchParams.get("next");
       if (requestedNext && requestedNext.startsWith("/") && !requestedNext.startsWith("//")) {
