@@ -4,7 +4,7 @@ import { recordScreeningEvent } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
-    let body: any;
+    let body: unknown;
     try {
       body = await req.json();
     } catch {

@@ -1,5 +1,4 @@
 import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -7,26 +6,38 @@ export async function GET(request: Request) {
   const code = url.searchParams.get("code");
   const next = url.searchParams.get("next");
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
-  const cookieStore = cookies();
 
   if (code) {
+    // Build the response we will ultimately return so we can set cookies on it
+    const redirectResponse = NextResponse.redirect(new URL(safeNext, url.origin));
+    const errorResponse = NextResponse.redirect(new URL("/login?error=oauth_callback", url.origin));
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name: string) { return cookieStore.get(name)?.value; },
-          set(name: string, value: string, options: Record<string, unknown>) {
-            cookieStore.set({ name, value, ...(options as object) });
+          getAll() {
+            return request.headers
+              .get("cookie")
+              ?.split(";")
+              .map((c) => {
+                const [name, ...rest] = c.trim().split("=");
+                return { name: name.trim(), value: rest.join("=").trim() };
+              }) ?? [];
           },
-          remove(name: string, options: Record<string, unknown>) {
-            cookieStore.set({ name, value: "", ...(options as object), maxAge: 0 });
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              redirectResponse.cookies.set(name, value, options);
+            });
           },
         },
       }
     );
+
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(new URL(safeNext, url.origin));
+    if (!error) return redirectResponse;
+    return errorResponse;
   }
 
   return NextResponse.redirect(new URL("/login?error=oauth_callback", url.origin));

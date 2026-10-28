@@ -38,7 +38,7 @@ export function validateUpload(file: File, modality: UploadModality): string | n
   if (file.size > spec.maxBytes) {
     return `File exceeds the ${Math.round(spec.maxBytes / (1024 * 1024))} MB limit for ${spec.label}.`;
   }
-  if (file.name.length > 255 || /[\\/\\\\\u0000-\u001f]/.test(file.name)) {
+  if (file.name.length > 255 || /[/\\\u0000-\u001f]/.test(file.name)) {
     return "Filename is invalid or too long.";
   }
   return null;

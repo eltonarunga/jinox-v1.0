@@ -55,9 +55,14 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} ${inter.variable}`}
     >
       <head>
+        {/* Preconnect to Google Fonts — non-render-blocking */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Material Symbols loaded with display=block to avoid layout shift */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=optional"
         />
       </head>
       <body className="bg-background font-body-md text-on-surface min-h-screen flex flex-col">
