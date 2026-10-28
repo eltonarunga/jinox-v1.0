@@ -13,6 +13,10 @@ export function AuthControls() {
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     let active = true;
+    if (!supabase) {
+      setError("Supabase is not configured.");
+      return () => { active = false; };
+    }
 
     supabase.auth.getUser().then(({ data, error: authError }) => {
       if (!active) return;
@@ -34,6 +38,11 @@ export function AuthControls() {
     setSigningOut(true);
     setError("");
     const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setError("Supabase is not configured.");
+      setSigningOut(false);
+      return;
+    }
     const { error: authError } = await supabase.auth.signOut();
     if (authError) {
       setError("Sign out failed. Please try again.");
