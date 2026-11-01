@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SiteNavigation } from "@/components/site-navigation";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { expectedMimeType, uploadTypes, validateUpload, type UploadModality } from "@/lib/validation/uploads";
@@ -293,7 +294,8 @@ export default function DataIntakePage() {
   const currentUploadType = uploadTypes[modality];
 
   return (
-    <main className="min-h-screen bg-[#f7f7f7] text-slate-900">
+    <main className="min-h-screen bg-white text-neutral-950">
+      <SiteNavigation currentPath="/data" />
       <div className="mx-auto max-w-6xl px-4 py-7 sm:px-8 sm:py-10">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
           <div>
@@ -301,11 +303,11 @@ export default function DataIntakePage() {
             <h1 className="mt-3 text-3xl font-semibold tracking-tight">Multimodal data intake</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Create a pseudonymous case, upload source files to private storage, and record structured clinical observations.</p>
           </div>
-          <Link href="/research" className={secondary}>Research workspace</Link>
+          <Link href="/datasets" className={secondary}>Dataset workspace</Link>
         </header>
 
         <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-          <strong>Research prototype safety rule.</strong> Upload only data you are authorized to use. Exclude names, national IDs, contact details and identifiers embedded in images or filenames. Files remain private and pending review. This workflow does not perform diagnosis, server-side content sniffing, malware scanning, image/DICOM pixel de-identification or model inference. CSV/JSON checks run in the browser and are not a security boundary.
+          <strong>Data governance rule.</strong> Upload only data you are authorized to use. Exclude names, national IDs, contact details and identifiers embedded in images or filenames. Files remain private and pending review. This workflow does not perform diagnosis, server-side content sniffing, malware scanning, image/DICOM pixel de-identification or model inference. CSV/JSON checks run in the browser and are not a security boundary.
         </div>
         {error && <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
         {notice && <div role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</div>}

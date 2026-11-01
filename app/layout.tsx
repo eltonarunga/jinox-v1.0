@@ -23,22 +23,22 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "JinoX AI — Dental Data & Annotation Platform",
+  title: "JinoX AI — Multimodal Oral Health Data Platform",
   description:
-    "Research data infrastructure for ethically governed East African oral-health datasets, expert annotation, quality review and dataset delivery.",
+    "Multimodal oral-health data collection, governed datasets, expert annotation, model development and digital-twin workflows.",
   authors: [{ name: "JinoX AI Project Team" }],
   keywords: [
     "JinoX AI",
     "Dental datasets",
-    "Oral-health research",
+    "Oral-health datasets",
     "Clinical data annotation",
-    "East African health AI",
+    "Multimodal health data",
     "Dataset quality",
   ],
   openGraph: {
     title: "JinoX AI — Dental Data & Annotation Platform",
     description:
-      "Collect, curate, annotate and deliver trusted oral-health research datasets.",
+      "Collect, curate, annotate and prepare trusted multimodal oral-health datasets.",
     type: "website",
     locale: "en_KE",
   },
