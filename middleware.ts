@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getPublicSupabaseConfig } from "@/lib/supabase/public-config";
+import { getSafeRedirectPath } from "@/lib/auth/safe-redirect";
 
 export async function middleware(request: NextRequest) {
   const config = getPublicSupabaseConfig();
@@ -45,7 +46,7 @@ export async function middleware(request: NextRequest) {
 
   if (user && isLogin) {
     const next = request.nextUrl.searchParams.get("next");
-    const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+    const safeNext = getSafeRedirectPath(next, request.url);
     return NextResponse.redirect(new URL(safeNext, request.url));
   }
 
