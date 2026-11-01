@@ -35,8 +35,8 @@ export function SiteNavigation({ currentPath = "/" }: { currentPath?: string }) 
             })}
           </ul>
         </nav>
-        <Link href="/login" className="inline-flex min-h-9 shrink-0 items-center rounded-lg bg-slate-950 px-3.5 text-xs font-semibold text-white transition hover:bg-slate-700 sm:text-sm">
-          Sign in
+        <Link href="/research" className="inline-flex min-h-9 shrink-0 items-center rounded-lg bg-slate-950 px-3.5 text-xs font-semibold text-white transition hover:bg-slate-700 sm:text-sm">
+          Open workspace
         </Link>
       </div>
     </header>
