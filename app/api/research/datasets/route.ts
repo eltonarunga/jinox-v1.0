@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   if (!isResearchContext(context)) return context;
 
   const bodyResult = await readJsonBody(request);
-  if (!bodyResult.success) return jsonError("Request body must be valid JSON.", 400);
+  if (!bodyResult.success) return jsonError(bodyResult.message, bodyResult.status);
   const body = bodyResult.value;
 
   const parsed = parseRegisterDatasetInput(body);
