@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -68,7 +67,7 @@ export default function GeneticsWorkspacePage() {
   }
 
   return <main className="min-h-screen bg-[#f7f7f7] text-slate-900"><div className="mx-auto max-w-5xl px-4 py-8 sm:px-8">
-    <header className="border-b border-slate-200 pb-5"><Link href="/clinical" className="text-sm font-semibold text-slate-500 hover:text-black">← Tools</Link><h1 className="mt-3 text-3xl font-semibold tracking-tight">Genetics research protocols</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Register research protocols and document the evidence, population and ethics status needed before any genomic analysis is considered.</p></header>
+    <header className="border-b border-slate-200 pb-5"><h1 className="mt-3 text-3xl font-semibold tracking-tight">Genetics research protocols</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Register research protocols and document the evidence, population and ethics status needed before any genomic analysis is considered.</p></header>
     <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950"><strong>Individual genetic prediction is disabled.</strong> This section stores study metadata only. It does not accept raw genomic files, infer genetic variants, calculate polygenic scores or predict individual disease risk. Those functions require dedicated genomic privacy controls, ethics approval, suitable datasets, population-specific validation and expert review.</div>
     {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
     {notice && <p role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</p>}
