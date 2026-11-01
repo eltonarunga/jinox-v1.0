@@ -1,14 +1,14 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse } from "next/server";
+import { getSafeRedirectPath } from "@/lib/auth/safe-redirect";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = url.searchParams.get("next");
-  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  const safeNext = getSafeRedirectPath(url.searchParams.get("next"), url.origin);
 
   if (code) {
-    // Build the response we will ultimately return so we can set cookies on it
+    // Build the response we will ultimately return so we can set cookies on it.
     const redirectResponse = NextResponse.redirect(new URL(safeNext, url.origin));
     const errorResponse = NextResponse.redirect(new URL("/login?error=oauth_callback", url.origin));
 
