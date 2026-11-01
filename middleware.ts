@@ -3,13 +3,27 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getPublicSupabaseConfig } from "@/lib/supabase/public-config";
 import { getSafeRedirectPath } from "@/lib/auth/safe-redirect";
 
-export async function middleware(request: NextRequest) {
-  const config = getPublicSupabaseConfig();
+const PUBLIC_PATHS = new Set(["/", "/login", "/privacy", "/terms"]);
 
-  // Let the app render its configuration guidance instead of throwing during
-  // local development or an incorrectly configured preview deployment.
-  // Protected data endpoints independently validate the caller and fail closed.
-  if (!config) return NextResponse.next();
+function redirectToLogin(request: NextRequest, error?: string) {
+  const loginUrl = request.nextUrl.clone();
+  loginUrl.pathname = "/login";
+  loginUrl.search = "";
+  loginUrl.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
+  if (error) loginUrl.searchParams.set("error", error);
+  return NextResponse.redirect(loginUrl);
+}
+
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const isPublicPage = PUBLIC_PATHS.has(pathname);
+  const isAuthCallback = pathname === "/auth/callback";
+
+  const config = getPublicSupabaseConfig();
+  if (!config) {
+    if (isPublicPage || isAuthCallback) return NextResponse.next();
+    return redirectToLogin(request, "configuration");
+  }
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(config.url, config.anonKey, {
@@ -20,38 +34,24 @@ export async function middleware(request: NextRequest) {
       setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
-        });
+        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
   });
 
   const { data: { user }, error } = await supabase.auth.getUser();
-  const pathname = request.nextUrl.pathname;
-  const isPublicPage = pathname === "/";
-  const isLogin = pathname === "/login";
-  const isAuthCallback = pathname.startsWith("/auth/callback");
 
-  // Do not redirect to login on transient auth service failures. Protected
-  // APIs still enforce authorization; the UI can recover from the auth error.
-  if (error) return response;
-
-  // The product landing page is intentionally public. Workspace routes remain
-  // protected and redirect unauthenticated visitors through the sign-in flow.
+  // Public legal and landing pages stay available when the auth provider is down.
   if (isPublicPage) return response;
+  if (isAuthCallback) return response;
 
-  if (!user && !isLogin && !isAuthCallback) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
-    loginUrl.search = "";
-    loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
-    return NextResponse.redirect(loginUrl);
-  }
+  // Fail closed for protected workspace pages when session validation fails.
+  if (error) return redirectToLogin(request, "auth_unavailable");
 
-  if (user && isLogin) {
-    const next = request.nextUrl.searchParams.get("next");
-    const safeNext = getSafeRedirectPath(next, request.url);
+  if (!user && pathname !== "/login") return redirectToLogin(request);
+
+  if (user && pathname === "/login") {
+    const safeNext = getSafeRedirectPath(request.nextUrl.searchParams.get("next"), request.url);
     return NextResponse.redirect(new URL(safeNext, request.url));
   }
 
