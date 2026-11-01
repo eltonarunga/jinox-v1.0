@@ -96,8 +96,8 @@ export default function ProjectsPage() {
 
     <div className="mx-auto max-w-6xl">
       <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div><Link href="/" className="text-sm text-slate-500 hover:text-slate-900">← JinoX workspace</Link><p className="mt-5 text-xs font-semibold uppercase tracking-[.18em] text-teal-700">Project operations</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#172b4d]">Projects</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Organize oral-health research, maintain project context and connect each project to its governed datasets.</p></div>
-        <Link href="/datasets" className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">Open dataset workspace →</Link>
+        <div><p className="mt-5 text-xs font-semibold uppercase tracking-[.18em] text-teal-700">Project operations</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#172b4d]">Projects</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Organize oral-health research, maintain project context and connect each project to its governed datasets.</p></div>
+        
       </header>
       {error && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
       {notice && <p role="status" className="mb-4 rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm text-teal-900">{notice}</p>}
