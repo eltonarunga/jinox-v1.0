@@ -66,7 +66,7 @@ export default function Home() {
           <div className="divide-y divide-neutral-200">{principles.map(([title, description], index) => <div key={title} className="flex gap-5 py-5 first:pt-0 last:pb-0"><span className="pt-0.5 text-xs font-semibold text-neutral-400">0{index + 1}</span><div><h3 className="text-sm font-semibold text-neutral-950">{title}</h3><p className="mt-1.5 text-sm leading-6 text-neutral-600">{description}</p></div></div>)}</div>
         </div>
       </section>
-      <footer className="border-t border-neutral-200"><div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-neutral-500 sm:flex-row sm:items-center sm:justify-between sm:px-8"><span>© {new Date().getFullYear()} JinoX AI · Multimodal oral-health data infrastructure</span><span>Research prototype · Not validated clinical decision support</span></div></footer>
+      <footer className="border-t border-neutral-200"><div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-xs text-neutral-500 sm:flex-row sm:items-center sm:justify-between sm:px-8"><span>© {new Date().getFullYear()} JinoX AI · Multimodal oral-health data infrastructure</span><span>Platform prototype · Not validated clinical decision support</span></div></footer>
     </main>
   );
 }
