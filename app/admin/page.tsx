@@ -10,7 +10,6 @@ type Profile = { id: string; email: string | null; display_name: string; institu
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = url && key ? createBrowserClient(url, key) : null;
-const roles: Role[] = ["member", "researcher", "clinician", "admin"];
 
 export default function AdminDashboardPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -57,8 +56,8 @@ export default function AdminDashboardPage() {
   return <main className="min-h-screen bg-[#f7f7f7] px-4 py-8 text-slate-900 sm:px-8">
     <div className="mx-auto max-w-6xl">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-6">
-        <div><Link href="/clinical" className="text-sm font-bold text-slate-950">JinoX AI</Link><p className="mt-2 text-xs font-semibold uppercase tracking-[.16em] text-slate-500">Platform administration</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Admin dashboard</h1><p className="mt-2 text-sm text-slate-500">Manage user profiles and access levels.</p></div>
-        <div className="flex gap-2"><Link href="/profile" className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold">My profile</Link><button onClick={() => void load()} className="rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white">Refresh</button></div>
+        <div><Link href="/" className="text-sm font-bold text-slate-950">JinoX AI</Link><p className="mt-2 text-xs font-semibold uppercase tracking-[.16em] text-slate-500">Platform administration</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Admin dashboard</h1><p className="mt-2 text-sm text-slate-500">Manage user profiles and access levels.</p></div>
+        <button onClick={() => void load()} className="rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white">Refresh</button>
       </header>
 
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}

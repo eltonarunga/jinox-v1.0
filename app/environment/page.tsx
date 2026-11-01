@@ -86,7 +86,7 @@ export default function EnvironmentalDataPage() {
   }
 
   return <main className="min-h-screen bg-[#f7f7f7] text-slate-900"><div className="mx-auto max-w-5xl px-4 py-8 sm:px-8">
-    <header className="border-b border-slate-200 pb-5"><Link href="/clinical" className="text-sm font-semibold text-slate-500 hover:text-black">← Clinical workspace</Link><h1 className="mt-3 text-3xl font-semibold tracking-tight">Environmental measurements</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Capture source-attributed water and climate measurements for oral-health research. County-level measurements are not a substitute for a verified sample result.</p></header>
+    <header className="border-b border-slate-200 pb-5"><h1 className="mt-3 text-3xl font-semibold tracking-tight">Environmental data</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Capture source-attributed water and climate measurements for oral-health research. County-level measurements are not a substitute for a verified sample result.</p></header>
     {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
     {notice && <p role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</p>}
     <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-lg font-semibold">New measurement</h2><form onSubmit={submit} className="mt-4 grid gap-4 sm:grid-cols-2">

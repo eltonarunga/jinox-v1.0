@@ -298,7 +298,7 @@ export default function DataIntakePage() {
       <div className="mx-auto max-w-6xl px-4 py-7 sm:px-8 sm:py-10">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
           <div>
-            <Link href="/clinical" className="text-sm font-semibold text-slate-500 hover:text-black">← Clinical workspace</Link>
+            
             <h1 className="mt-3 text-3xl font-semibold tracking-tight">Multimodal data intake</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Create a pseudonymous case, upload source files to private storage, and record structured clinical observations.</p>
           </div>
