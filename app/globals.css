@@ -4,25 +4,20 @@
 
 :root {
   color-scheme: light;
-  --jinox-ink: #111111;
-  --jinox-muted: #666666;
+  --jinox-black: #090909;
+  --jinox-ink: #171717;
+  --jinox-muted: #737373;
   --jinox-line: #e5e5e5;
-  --jinox-canvas: #f7f7f7;
-  --jinox-primary: #111111;
+  --jinox-canvas: #fafafa;
+  --jinox-surface: #ffffff;
+  --jinox-primary: #090909;
   --jinox-primary-strong: #000000;
-  --jinox-mint: #eeeeee;
+  --jinox-soft: #f5f5f5;
 }
 
 @layer base {
-  html, body {
-    margin: 0;
-    min-height: 100%;
-    padding: 0;
-  }
-  html {
-    scroll-behavior: smooth;
-    scrollbar-gutter: stable;
-  }
+  html, body { margin: 0; min-height: 100%; padding: 0; }
+  html { scroll-behavior: smooth; scrollbar-gutter: stable; }
   body {
     background: var(--jinox-canvas);
     color: var(--jinox-ink);
@@ -30,59 +25,43 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  button, input, select, textarea {
-    font: inherit;
-  }
-  button, a, input, select, textarea {
-    -webkit-tap-highlight-color: transparent;
-  }
-  :focus-visible {
-    outline: 2px solid #111111;
-    outline-offset: 2px;
-  }
-  ::selection {
-    background: #e8e8e8;
-    color: #111111;
-  }
-  main > :first-child {
-    margin-top: 0;
-  }
+  button, input, select, textarea { font: inherit; }
+  button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 2px solid #090909; outline-offset: 3px; }
+  ::selection { background: #d4d4d4; color: #090909; }
+  main > :first-child { margin-top: 0; }
 }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #c9c9c9 transparent;
-}
+* { scrollbar-width: thin; scrollbar-color: #bdbdbd transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: #bdbdbd; background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
-  border-radius: 999px;
-  background: #c9c9c9;
-  background-clip: padding-box;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+.progress-fill-transition { transition: width .25s ease; }
+.bar-fill-transition { transition: width .8s cubic-bezier(.16, 1, .3, 1); }
+.ring-transition { transition: stroke-dashoffset .9s cubic-bezier(.16, 1, .3, 1), stroke .3s ease; }
 
-.progress-fill-transition {
-  transition: width 0.25s ease;
-}
-.bar-fill-transition {
-  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.ring-transition {
-  transition: stroke-dashoffset 0.9s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.3s ease;
-}
+/* JinoX monochrome system: preserve hierarchy through tone, weight and spacing. */
+[class*="bg-teal-"], [class*="bg-blue-"], [class*="bg-violet-"], [class*="bg-purple-"],
+[class*="bg-amber-"], [class*="bg-emerald-"], [class*="bg-green-"], [class*="bg-red-"],
+[class*="bg-indigo-"], [class*="bg-cyan-"], [class*="bg-sky-"], [class*="bg-orange-"],
+[class*="bg-pink-"] { background-color: #f5f5f5 !important; }
+
+[class*="text-teal-"], [class*="text-blue-"], [class*="text-violet-"], [class*="text-purple-"],
+[class*="text-amber-"], [class*="text-emerald-"], [class*="text-green-"], [class*="text-red-"],
+[class*="text-indigo-"], [class*="text-cyan-"], [class*="text-sky-"], [class*="text-orange-"],
+[class*="text-pink-"] { color: #525252 !important; }
+
+[class*="border-teal-"], [class*="border-blue-"], [class*="border-violet-"], [class*="border-purple-"],
+[class*="border-amber-"], [class*="border-emerald-"], [class*="border-green-"], [class*="border-red-"],
+[class*="border-indigo-"], [class*="border-cyan-"], [class*="border-sky-"], [class*="border-orange-"],
+[class*="border-pink-"] { border-color: #d4d4d4 !important; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
+    animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: .01ms !important;
   }
 }
