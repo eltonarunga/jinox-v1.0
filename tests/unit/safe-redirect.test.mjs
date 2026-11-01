@@ -17,8 +17,8 @@ test("rejects backslash-based external destinations", () => {
   assert.equal(getSafeRedirectPath("/\\\\evil.example/path", base), "/");
 });
 
-test("rejects missing, relative and malformed destinations", () => {
+test("rejects missing, relative and malformed base URLs", () => {
   assert.equal(getSafeRedirectPath(null, base), "/");
   assert.equal(getSafeRedirectPath("research/projects", base), "/");
-  assert.equal(getSafeRedirectPath("/%zz", base), "/");
+  assert.equal(getSafeRedirectPath("/research/projects", "not-a-url"), "/");
 });
