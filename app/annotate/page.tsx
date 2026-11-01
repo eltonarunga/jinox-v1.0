@@ -134,14 +134,11 @@ export default function AnnotatePage() {
   return <main className="min-h-screen bg-[#f7f7f7] text-slate-900">
 
     <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
-        <Link href="/projects" className="flex items-center gap-3"><span className="rounded-md bg-black px-3 py-2 text-sm font-bold text-white">JinoX AI</span><span className="text-sm text-slate-500">Dataset annotation</span></Link>
-        <nav className="flex gap-2"><Link className={secondary} href="/data">Collect data</Link><Link className={secondary} href="/projects">Projects</Link></nav>
-      </header>
+      
       <section className="py-8">
         <p className="text-xs font-bold uppercase tracking-[.18em] text-slate-500">Dataset operations</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Collect. Annotate. Review.</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">Curate source assets into governed datasets, attach versioned labels, and preserve annotation history. This first release is owner-scoped; multi-annotator collaboration and adjudication come next.</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Annotation workspace</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">Label dataset items and submit annotations for review.</p>
       </section>
       {error && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
       {notice && <div role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
