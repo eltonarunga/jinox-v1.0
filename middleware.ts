@@ -29,12 +29,17 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user }, error } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
+  const isPublicPage = pathname === "/";
   const isLogin = pathname === "/login";
   const isAuthCallback = pathname.startsWith("/auth/callback");
 
   // Do not redirect to login on transient auth service failures. Protected
   // APIs still enforce authorization; the UI can recover from the auth error.
   if (error) return response;
+
+  // The product landing page is intentionally public. Workspace routes remain
+  // protected and redirect unauthenticated visitors through the sign-in flow.
+  if (isPublicPage) return response;
 
   if (!user && !isLogin && !isAuthCallback) {
     const loginUrl = request.nextUrl.clone();
