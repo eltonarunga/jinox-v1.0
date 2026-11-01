@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { SiteNavigation } from "@/components/site-navigation";
 import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
 
@@ -93,6 +94,7 @@ export default function ResearchProjectsPage() {
   if (!session) return <main className="min-h-screen bg-[#f7f9fc] p-8"><div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-8"><h1 className="text-xl font-semibold text-slate-950">Sign in required</h1><p className="mt-2 text-sm text-slate-600">Sign in to view or create research projects.</p><Link className="mt-5 inline-flex rounded-xl bg-[#233b67] px-4 py-2.5 text-sm font-semibold text-white" href="/research">Go to sign in</Link></div></main>;
 
   return <main className="min-h-screen bg-[#f7f9fc] px-4 py-8 text-slate-900 sm:px-8">
+    <SiteNavigation currentPath="/research/projects" />
     <div className="mx-auto max-w-6xl">
       <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div><Link href="/research" className="text-sm text-slate-500 hover:text-slate-900">← Research workspace</Link><p className="mt-5 text-xs font-semibold uppercase tracking-[.18em] text-teal-700">Project operations</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-[#172b4d]">Research projects</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Organize oral-health research, maintain project context and connect each project to its governed datasets.</p></div>

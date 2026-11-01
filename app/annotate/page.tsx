@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SiteNavigation } from "@/components/site-navigation";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -132,6 +133,7 @@ export default function AnnotatePage() {
   const eligibleAssets = assets.filter(a => !includedIds.has(a.id) && ["approved", "pending_review"].includes(a.status));
 
   return <main className="min-h-screen bg-[#f7f7f7] text-slate-900">
+    <SiteNavigation currentPath="/annotate" />
     <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
         <Link href="/research" className="flex items-center gap-3"><span className="rounded-md bg-black px-3 py-2 text-sm font-bold text-white">JinoX AI</span><span className="text-sm text-slate-500">Dataset annotation</span></Link>
