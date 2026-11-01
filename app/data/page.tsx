@@ -294,7 +294,8 @@ export default function DataIntakePage() {
   const currentUploadType = uploadTypes[modality];
 
   return (
-    <main className="min-h-screen bg-white text-neutral-950">\n      <SiteNavigation currentPath="/data" />
+    <main className="min-h-screen bg-white text-neutral-950">
+      <SiteNavigation currentPath="/data" />
       <div className="mx-auto max-w-6xl px-4 py-7 sm:px-8 sm:py-10">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
           <div>
