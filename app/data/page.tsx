@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SiteNavigation } from "@/components/site-navigation";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { expectedMimeType, uploadTypes, validateUpload, type UploadModality } from "@/lib/validation/uploads";
@@ -301,7 +302,7 @@ export default function DataIntakePage() {
             <h1 className="mt-3 text-3xl font-semibold tracking-tight">Multimodal data intake</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Create a pseudonymous case, upload source files to private storage, and record structured clinical observations.</p>
           </div>
-          <Link href="/research" className={secondary}>Research workspace</Link>
+          <Link href="/datasets" className={secondary}>Dataset workspace</Link>
         </header>
 
         <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
