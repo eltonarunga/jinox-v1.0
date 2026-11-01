@@ -4,6 +4,14 @@ const nextConfig = {
   output: "standalone",
   poweredByHeader: false,
   compress: true,
+  async redirects() {
+    return [
+      { source: "/research/datasets", destination: "/datasets", permanent: true },
+      { source: "/research/projects", destination: "/projects", permanent: true },
+      { source: "/research/:path*", destination: "/", permanent: true },
+      { source: "/research", destination: "/", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {
