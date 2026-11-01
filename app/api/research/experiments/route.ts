@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getResearchContext, isResearchContext, jsonError } from '@/lib/research-auth';
+import { readJsonBody } from "@/lib/api/read-json";
 
 const STATUSES = new Set(['planned','running','completed','failed','cancelled']);
 
@@ -19,8 +20,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const context = await getResearchContext(request);
   if (!isResearchContext(context)) return context;
-  let body: unknown;
-  try { body = await request.json(); } catch { return jsonError('Request body must be valid JSON.', 400); }
+  const bodyResult = await readJsonBody(request);
+  if (!bodyResult.success) return jsonError("Request body must be valid JSON.", 400);
+  const body = bodyResult.value;
   if (!body || typeof body !== 'object' || Array.isArray(body)) return jsonError('Expected a JSON object.', 400);
   const input = body as Record<string, unknown>;
   const projectId = typeof input.project_id === 'string' ? input.project_id : '';
@@ -39,14 +41,19 @@ export async function POST(request: NextRequest) {
   if (!STATUSES.has(status)) return jsonError('Unsupported status.', 400);
   if (!metrics || typeof metrics !== 'object' || Array.isArray(metrics)) return jsonError('metrics must be a JSON object.', 400);
 
-  const { data, error } = await context.supabase.from('research_experiments').insert({
-    project_id: projectId, dataset_id: datasetId, name, hypothesis, method,
-    model_version: modelVersion, status, metrics, notes, created_by: context.userId,
-  }).select('id,project_id,dataset_id,name,hypothesis,method,model_version,status,metrics,notes,created_by,created_at,updated_at').single();
-  if (error) return jsonError('Could not create experiment. Check project permissions, dataset ownership, and field values.', 400);
-  await context.supabase.from('research_audit_logs').insert({
-    project_id: projectId, actor_id: context.userId, action: 'experiment.created',
-    resource_type: 'research_experiment', resource_id: data.id, details: { status },
+  const { data, error } = await context.supabase.rpc('create_research_experiment_with_audit', {
+    p_project_id: projectId,
+    p_dataset_id: datasetId,
+    p_name: name,
+    p_hypothesis: hypothesis,
+    p_method: method,
+    p_model_version: modelVersion,
+    p_status: status,
+    p_metrics: metrics,
+    p_notes: notes,
   });
+  if (error || !data || typeof data !== 'object' || Array.isArray(data)) {
+    return jsonError('Could not create experiment. Check project permissions, dataset ownership, and field values.', 400);
+  }
   return NextResponse.json({ data }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
 }

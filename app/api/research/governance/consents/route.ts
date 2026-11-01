@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getResearchContext, isResearchContext, jsonError } from '@/lib/research-auth';
+import { readJsonBody } from "@/lib/api/read-json";
 
 const STATUSES = new Set(['pending','granted','withdrawn','not_required']);
 const LANGUAGES = new Set(['en','sw','other']);
@@ -19,8 +20,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const context = await getResearchContext(request);
   if (!isResearchContext(context)) return context;
-  let body: unknown;
-  try { body = await request.json(); } catch { return jsonError('Request body must be valid JSON.', 400); }
+  const bodyResult = await readJsonBody(request);
+  if (!bodyResult.success) return jsonError("Request body must be valid JSON.", 400);
+  const body = bodyResult.value;
   if (!body || typeof body !== 'object' || Array.isArray(body)) return jsonError('Expected a JSON object.', 400);
   const input = body as Record<string, unknown>;
   const projectId = typeof input.project_id === 'string' ? input.project_id : '';
@@ -36,15 +38,17 @@ export async function POST(request: NextRequest) {
   if (status === 'granted' && typeof input.consented_at !== 'string') return jsonError('consented_at is required when consent_status is granted.', 400);
   const consentedAt = typeof input.consented_at === 'string' ? input.consented_at : null;
   const withdrawnAt = status === 'withdrawn' ? new Date().toISOString() : null;
-  const { data, error } = await context.supabase.from('research_consents').insert({
-    project_id: projectId, participant_code: participantCode, consent_status: status,
-    consent_version: consentVersion, language, consented_at: consentedAt,
-    withdrawn_at: withdrawnAt, created_by: context.userId,
-  }).select('id,project_id,participant_code,consent_status,consent_version,language,consented_at,withdrawn_at,created_by,created_at,updated_at').single();
-  if (error) return jsonError('Could not save consent metadata. Access is limited to project owners and principal investigators.', 403);
-  await context.supabase.from('research_audit_logs').insert({
-    project_id: projectId, actor_id: context.userId, action: 'consent.recorded',
-    resource_type: 'research_consent', resource_id: data.id, details: { consent_status: status, language },
+  const { data, error } = await context.supabase.rpc('record_research_consent_with_audit', {
+    p_project_id: projectId,
+    p_participant_code: participantCode,
+    p_consent_status: status,
+    p_consent_version: consentVersion,
+    p_language: language,
+    p_consented_at: consentedAt,
+    p_withdrawn_at: withdrawnAt,
   });
+  if (error || !data || typeof data !== 'object' || Array.isArray(data)) {
+    return jsonError('Could not save consent metadata. Access is limited to project owners and principal investigators.', 403);
+  }
   return NextResponse.json({ data }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
 }

@@ -160,7 +160,7 @@ create or replace function public.research_set_dataset_item_timestamps()
 returns trigger
 language plpgsql
 set search_path = ''
-as $
+as $$
 begin
   if tg_op = 'INSERT' then
     new.assigned_at := case when new.assigned_to is null then null else now() end;
@@ -170,7 +170,7 @@ begin
   new.updated_at := now();
   return new;
 end;
-$;
+$$;
 
 revoke all on function public.research_set_dataset_item_timestamps() from public, anon, authenticated;
 drop trigger if exists research_set_dataset_item_timestamps on public.dataset_items;
