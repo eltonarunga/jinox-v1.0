@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { SiteNavigation } from "@/components/site-navigation";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { expectedMimeType, uploadTypes, validateUpload, type UploadModality } from "@/lib/validation/uploads";
@@ -295,7 +294,7 @@ export default function DataIntakePage() {
 
   return (
     <main className="min-h-screen bg-white text-neutral-950">
-      <SiteNavigation currentPath="/data" />
+
       <div className="mx-auto max-w-6xl px-4 py-7 sm:px-8 sm:py-10">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
           <div>

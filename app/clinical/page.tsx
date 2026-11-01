@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { SiteNavigation } from "@/components/site-navigation";
 
 const workflows = [
   { number: "01", title: "Collect & submit", description: "Create pseudonymous cases, upload permitted source files and record structured observations.", href: "/data" },
@@ -12,7 +11,7 @@ const workflows = [
 export default function ClinicalWorkspacePage() {
   return (
     <main className="min-h-screen bg-white text-neutral-950">
-      <SiteNavigation currentPath="/clinical" />
+
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <header className="max-w-3xl border-b border-neutral-200 pb-8">
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-neutral-500">JinoX workspace</p>
