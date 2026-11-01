@@ -51,8 +51,8 @@ export default function DigitalTwinPage() {
 
   const selected = cases.find((item) => item.id === caseId);
   return <main className="min-h-screen bg-white text-neutral-950"><div className="mx-auto max-w-6xl px-4 py-8 sm:px-8">
-    <header className="border-b border-slate-200 pb-5"><Link href="/clinical" className="text-sm font-semibold text-slate-500 hover:text-black">← Tools</Link><h1 className="mt-3 text-3xl font-semibold tracking-tight">Case records</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Review uploaded files and dated observations for a selected case.</p></header>
-    <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950"><strong>This is a record viewer. 3D and biological simulation are not available.</div>
+    <header className="border-b border-slate-200 pb-5"><h1 className="mt-3 text-3xl font-semibold tracking-tight">Case records</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Review uploaded files and dated observations for a selected case.</p></header>
+    <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950"><strong>Record viewer only.</strong> 3D and biological simulation are not available.</div>
     {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
     <section className={`${panel} mt-6`}><label className="block text-sm font-medium">Case profile<select className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm" value={caseId} onChange={e=>setCaseId(e.target.value)}><option value="">Select a case</option>{cases.map(c=><option key={c.id} value={c.id}>{c.case_code} · {c.county}</option>)}</select></label>
       {loading ? <p className="mt-4 text-sm text-slate-500">Loading case records…</p> : !selected ? <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">No cases available. <Link className="underline" href="/data">Create a case and add source data.</Link></div> : <>
