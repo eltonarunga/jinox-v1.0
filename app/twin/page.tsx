@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { SiteNavigation } from "@/components/site-navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -51,7 +50,7 @@ export default function DigitalTwinPage() {
   useEffect(() => { void refreshDetails(caseId); }, [caseId, refreshDetails]);
 
   const selected = cases.find((item) => item.id === caseId);
-  return <main className="min-h-screen bg-white text-neutral-950"><SiteNavigation currentPath="/twin" /><div className="mx-auto max-w-6xl px-4 py-8 sm:px-8">
+  return <main className="min-h-screen bg-white text-neutral-950"><div className="mx-auto max-w-6xl px-4 py-8 sm:px-8">
     <header className="border-b border-slate-200 pb-5"><Link href="/clinical" className="text-sm font-semibold text-slate-500 hover:text-black">← Clinical workspace</Link><h1 className="mt-3 text-3xl font-semibold tracking-tight">Digital twin workspace</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">A case-linked digital record that brings together uploaded modalities and dated clinical observations. This first release supports longitudinal review, not biological simulation.</p></header>
     <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950"><strong>Capability boundary.</strong> The 3D geometry pipeline, tissue/microbiome simulation, disease progression engine and treatment scenario simulator are not connected yet. This page does not infer unobserved anatomy or predict patient outcomes.</div>
     {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
