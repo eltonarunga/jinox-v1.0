@@ -45,8 +45,8 @@ export async function middleware(request: NextRequest) {
   if (isPublicPage) return response;
   if (isAuthCallback) return response;
 
-  // Fail closed for protected workspace pages when session validation fails.
-  if (error) return redirectToLogin(request, "auth_unavailable");
+  // Keep the login screen reachable when auth is temporarily unavailable; fail closed elsewhere.
+  if (error) return pathname === "/login" ? response : redirectToLogin(request, "auth_unavailable");
 
   if (!user && pathname !== "/login") return redirectToLogin(request);
 
