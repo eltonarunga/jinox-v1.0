@@ -174,22 +174,21 @@ Only show released datasets to catalogue audiences authorized by their access te
 
 ### Suggested visual system
 
-These are proposed starting tokens; align them with existing application components before implementation.
+The application uses a deliberately restrained black, white and neutral-gray palette. Hierarchy comes from typography, spacing, borders and surface contrast—not saturated accent colors, gradients or decorative effects.
 
-| Token | Proposed value | Usage |
+| Token | Value | Usage |
 | --- | --- | --- |
-| Primary | Deep indigo #233B67 | Primary actions, active navigation and links |
-| Accent | Teal #168C83 | Positive progress and secondary emphasis |
-| Canvas | Cool off-white #F7F9FC | Main app background |
-| Surface | White #FFFFFF | Cards, tables and work panels |
-| Text | Charcoal #172033 | Main text |
-| Muted text | Slate #5D687A | Supporting labels and metadata |
-| Border | Soft slate #DCE3EC | Dividers and field outlines |
-| Warning | Accessible amber | Attention and pending review |
-| Error | Accessible red | Failed validation and blocked actions |
-| Success | Accessible dark teal/green | Verified completion states |
+| Primary | Near-black #090909 | Primary actions, active navigation and key emphasis |
+| Secondary | Charcoal #171717 | Headings and high-priority text |
+| Canvas | White #FFFFFF | Main application background |
+| Surface | Soft white #FAFAFA | Secondary panels and quiet work areas |
+| Text | Near-black #171717 | Main content |
+| Muted text | Neutral gray #737373 | Supporting labels and metadata |
+| Border | Light gray #E5E5E5 | Dividers, tables and field outlines |
+| Subtle surface | Neutral #F5F5F5 | Hover states, quiet status panels and selected rows |
+| Focus | Black #090909 | Visible keyboard focus indicator |
 
-Use color plus text/icon labels for status; never communicate permission, risk or quality by color alone. Validate contrast against WCAG 2.2 AA. Avoid excessive gradients, glassmorphism, glowing AI effects, and decorative charts that obscure real work.
+Use monochrome status treatments with explicit text and accessible icons. Permission, risk, validation and quality states must never depend on hue alone. Validate contrast against WCAG 2.2 AA. Avoid excessive gradients, glassmorphism, glowing AI effects, saturated status colors and decorative charts that obscure real work.
 
 ### Typography and spacing
 
