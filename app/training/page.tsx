@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { SiteNavigation } from "@/components/site-navigation";
 
 const stages = [
   ["01", "Select a governed dataset", "Choose a versioned dataset with documented provenance, permitted use and a defined cohort."],
@@ -11,7 +10,7 @@ const stages = [
 export default function ModelTrainingPage() {
   return (
     <main className="min-h-screen bg-white text-neutral-950">
-      <SiteNavigation currentPath="/training" />
+
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <header className="max-w-3xl border-b border-neutral-200 pb-8">
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-neutral-500">Model development</p>
