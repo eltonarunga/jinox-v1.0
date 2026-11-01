@@ -42,6 +42,7 @@
 .ring-transition { transition: stroke-dashoffset .9s cubic-bezier(.16, 1, .3, 1), stroke .3s ease; }
 
 /* JinoX monochrome system: preserve hierarchy through tone, weight and spacing. */
+main[class*="bg-[#f7"] { background-color: #ffffff !important; }
 [class*="bg-teal-"], [class*="bg-blue-"], [class*="bg-violet-"], [class*="bg-purple-"],
 [class*="bg-amber-"], [class*="bg-emerald-"], [class*="bg-green-"], [class*="bg-red-"],
 [class*="bg-indigo-"], [class*="bg-cyan-"], [class*="bg-sky-"], [class*="bg-orange-"],
