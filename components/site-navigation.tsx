@@ -12,8 +12,9 @@ const primaryLinks = [
   { href: "/datasets", label: "Datasets" },
   { href: "/projects", label: "Projects" },
   { href: "/annotate", label: "Annotation" },
-  { href: "/training", label: "Model training" },
-  { href: "/twin", label: "Digital twin" },
+  { href: "/training", label: "Training prep" },
+  { href: "/twin", label: "Case records" },
+  { href: "/clinical", label: "Tools" },
 ];
 
 function isActive(pathname: string, href: string) {
