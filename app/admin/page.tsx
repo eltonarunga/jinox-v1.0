@@ -10,7 +10,6 @@ type Profile = { id: string; email: string | null; display_name: string; institu
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = url && key ? createBrowserClient(url, key) : null;
-const roles: Role[] = ["member", "researcher", "clinician", "admin"];
 
 export default function AdminDashboardPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
