@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteNavigation } from "@/components/site-navigation";
 
 const modules = [
   { title: "Multimodal data intake", description: "Create pseudonymous cases, upload dental photographs, radiographs, intraoral scans, clinical records and environmental datasets, and record structured findings.", href: "/data", action: "Open data intake", tag: "Available", available: true },
@@ -12,6 +13,7 @@ const modules = [
 export default function ClinicalWorkspacePage() {
   return (
     <main className="min-h-screen bg-[#f7f7f7] text-slate-900">
+      <SiteNavigation currentPath="/clinical" />
       <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-6">
           <Link href="/clinical" aria-label="JinoX AI clinical workspace" className="inline-flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black">
