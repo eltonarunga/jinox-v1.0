@@ -2,28 +2,37 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { getSafeRedirectPath } from "@/lib/auth/safe-redirect";
 
 function LoginPageContent() {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(() => searchParams.get("error") === "oauth_callback" ? "Google sign-in could not be completed. Please try again, and confirm the OAuth callback URLs in Supabase and Google Cloud." : "");
+  const [error, setError] = useState(() => {
+    const code = searchParams.get("error");
+    if (code === "oauth_callback") return "Google sign-in could not be completed. Please try again. If the problem continues, ask the platform administrator to verify the OAuth callback configuration.";
+    if (code === "configuration") return "Authentication is not configured for this deployment. Workspace access is disabled until the administrator completes setup.";
+    if (code === "auth_unavailable") return "We could not verify your session. Please try again when authentication is available.";
+    return "";
+  });
 
   async function signInWithGoogle() {
     setLoading(true);
     setError("");
     try {
       const supabase = getSupabaseBrowserClient();
-      if (!supabase) throw new Error("Supabase is not configured. Please contact the platform administrator.");
+      if (!supabase) throw new Error("Sign-in is not configured for this deployment. Please contact the platform administrator.");
+      const requestedNext = searchParams.get("next");
+      const safeNext = getSafeRedirectPath(requestedNext, window.location.origin);
       const callbackUrl = new URL("/auth/callback", window.location.origin);
-      const requestedNext = new URL(window.location.href).searchParams.get("next");
-      if (requestedNext && requestedNext.startsWith("/") && !requestedNext.startsWith("//")) {
-        callbackUrl.searchParams.set("next", requestedNext);
-      }
-      const redirectTo = callbackUrl.toString();
+      callbackUrl.searchParams.set("next", safeNext);
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo, queryParams: { access_type: "offline", prompt: "select_account" } },
+        options: {
+          redirectTo: callbackUrl.toString(),
+          queryParams: { access_type: "offline", prompt: "select_account" },
+        },
       });
       if (authError) throw authError;
     } catch (err) {
@@ -33,25 +42,20 @@ function LoginPageContent() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-5 py-12 text-neutral-950">
+    <main className="flex min-h-[70vh] items-center justify-center bg-white px-5 py-12 text-neutral-950">
       <section className="w-full max-w-md">
-        <div className="mb-10 inline-flex rounded-md bg-black px-4 py-2 text-lg font-semibold tracking-tight text-white">JinoX AI</div>
-        <div className="rounded-2xl border border-neutral-200 bg-white p-7 shadow-sm sm:p-9">
-          <p className="text-xs font-semibold uppercase tracking-[.18em] text-neutral-500">Clinical intelligence · Research platform</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Sign in to JinoX AI</h1>
-          <p className="mt-3 text-sm leading-6 text-neutral-600">Use your Google account to access the research workspace. Only Google sign-in is available.</p>
-          <button type="button" onClick={signInWithGoogle} disabled={loading}
-            className="mt-8 flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border border-neutral-300 bg-white px-4 py-3 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.09-1.92 3.27-4.74 3.27-8.1Z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.15v2.87A11 11 0 0 0 12 23Z"/>
-              <path fill="#FBBC05" d="M5.84 14.11A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.11V7.02H2.15A11 11 0 0 0 1 12c0 1.78.43 3.47 1.15 4.98l3.69-2.87Z"/>
-              <path fill="#EA4335" d="M12 5.36c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.46 14.97 0 12 0A11 11 0 0 0 2.15 7.02l3.69 2.87C6.71 7.29 9.14 5.36 12 5.36Z"/>
-            </svg>
+        <div className="border border-neutral-200 bg-white p-7 sm:p-9">
+          <p className="text-xs font-semibold uppercase tracking-[.18em] text-neutral-500">JinoX account access</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Sign in</h1>
+          <p className="mt-3 text-sm leading-6 text-neutral-600">Use your authorized Google account to access the multimodal data workspace. Access to datasets and case records is controlled by your assigned permissions.</p>
+          <button type="button" onClick={signInWithGoogle} disabled={loading || searchParams.get("error") === "configuration"}
+            className="mt-8 flex min-h-12 w-full items-center justify-center gap-3 border border-neutral-300 bg-black px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60">
+            <span aria-hidden="true" className="grid h-5 w-5 place-items-center border border-white/70 text-xs font-bold">G</span>
             {loading ? "Redirecting to Google…" : "Continue with Google"}
           </button>
-          {error ? <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
-          <p className="mt-6 text-xs leading-5 text-neutral-500">Access is subject to JinoX AI’s authorization and research governance policies. Prototype outputs are not validated clinical advice.</p>
+          {error ? <p role="alert" className="mt-4 border border-neutral-200 bg-neutral-50 p-3 text-sm leading-6 text-neutral-700">{error}</p> : null}
+          <p className="mt-6 text-xs leading-5 text-neutral-500">By continuing, you acknowledge the <Link href="/terms" className="font-semibold text-neutral-800 underline underline-offset-2">Terms of Service</Link> and <Link href="/privacy" className="font-semibold text-neutral-800 underline underline-offset-2">Privacy Policy</Link>.</p>
+          <p className="mt-4 border-t border-neutral-200 pt-4 text-xs leading-5 text-neutral-500">JinoX AI is a platform prototype. Its outputs are not validated clinical decision support and must not replace professional judgment.</p>
         </div>
       </section>
     </main>
@@ -59,15 +63,5 @@ function LoginPageContent() {
 }
 
 export default function LoginPage() {
-  return (
-    <Suspense
-      fallback={
-        <main className="flex min-h-screen items-center justify-center bg-white text-neutral-950">
-          <p className="text-sm text-neutral-600">Loading sign-in…</p>
-        </main>
-      }
-    >
-      <LoginPageContent />
-    </Suspense>
-  );
+  return <Suspense fallback={<main className="flex min-h-[70vh] items-center justify-center bg-white"><p className="text-sm text-neutral-600">Loading sign-in…</p></main>}><LoginPageContent /></Suspense>;
 }
