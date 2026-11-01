@@ -307,7 +307,7 @@ export default function DataIntakePage() {
         </header>
 
         <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-          <strong>Research prototype safety rule.</strong> Upload only data you are authorized to use. Exclude names, national IDs, contact details and identifiers embedded in images or filenames. Files remain private and pending review. This workflow does not perform diagnosis, server-side content sniffing, malware scanning, image/DICOM pixel de-identification or model inference. CSV/JSON checks run in the browser and are not a security boundary.
+          <strong>Data governance rule.</strong> Upload only data you are authorized to use. Exclude names, national IDs, contact details and identifiers embedded in images or filenames. Files remain private and pending review. This workflow does not perform diagnosis, server-side content sniffing, malware scanning, image/DICOM pixel de-identification or model inference. CSV/JSON checks run in the browser and are not a security boundary.
         </div>
         {error && <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
         {notice && <div role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</div>}
