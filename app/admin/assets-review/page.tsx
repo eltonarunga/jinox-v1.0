@@ -52,6 +52,7 @@ export default function AssetReviewPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [role, setRole] = useState<string | null>(null);
+  const [actorId, setActorId] = useState("");
   const [filter, setFilter] = useState("all");
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
@@ -71,6 +72,7 @@ export default function AssetReviewPage() {
         .from("profiles").select("role").eq("id", auth.user.id).single();
       if (roleError) throw roleError;
       setRole(own.role);
+      setActorId(auth.user.id);
       if (own.role !== "admin") {
         setAssets([]);
         setReviews([]);
@@ -210,6 +212,7 @@ export default function AssetReviewPage() {
                     <button type="button" onClick={() => void createPreview(asset)} className="border border-slate-300 px-3 py-2 text-sm font-medium hover:bg-slate-50">Generate 5-minute file link</button>
                     {previewUrls[asset.id] && <a href={previewUrls[asset.id]} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold underline">Open private file</a>}
                     <span className="text-xs text-slate-500">Uploader: {asset.owner_id}</span>
+                    {asset.owner_id === actorId && <span className="text-xs font-medium text-amber-800">You uploaded this item; another administrator must review it.</span>}
                   </div>
 
                   <label className="mt-4 block text-sm font-medium">Review rationale
@@ -217,9 +220,9 @@ export default function AssetReviewPage() {
                     <textarea value={reasons[asset.id] ?? ""} onChange={(event) => setReasons((current) => ({ ...current, [asset.id]: event.target.value }))} maxLength={2000} rows={2} className="mt-2 w-full border border-slate-300 bg-white p-3 text-sm" placeholder="Required for rejection or quarantine; optional for approval." />
                   </label>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <button type="button" disabled={busyId === asset.id} onClick={() => void submitDecision(asset, "approve")} className="bg-black px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Approve</button>
-                    <button type="button" disabled={busyId === asset.id} onClick={() => void submitDecision(asset, "reject")} className="border border-slate-300 px-4 py-2 text-sm font-semibold disabled:opacity-50">Reject</button>
-                    <button type="button" disabled={busyId === asset.id} onClick={() => void submitDecision(asset, "quarantine")} className="border border-amber-400 px-4 py-2 text-sm font-semibold text-amber-900 disabled:opacity-50">Quarantine</button>
+                    <button type="button" disabled={busyId === asset.id || asset.owner_id === actorId} onClick={() => void submitDecision(asset, "approve")} className="bg-black px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Approve</button>
+                    <button type="button" disabled={busyId === asset.id || asset.owner_id === actorId} onClick={() => void submitDecision(asset, "reject")} className="border border-slate-300 px-4 py-2 text-sm font-semibold disabled:opacity-50">Reject</button>
+                    <button type="button" disabled={busyId === asset.id || asset.owner_id === actorId} onClick={() => void submitDecision(asset, "quarantine")} className="border border-amber-400 px-4 py-2 text-sm font-semibold text-amber-900 disabled:opacity-50">Quarantine</button>
                     {busyId === asset.id && <span role="status" className="self-center text-xs text-slate-500">Recording decision…</span>}
                   </div>
                 </article>
