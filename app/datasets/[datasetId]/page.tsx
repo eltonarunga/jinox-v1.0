@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Dataset = {
@@ -66,6 +66,20 @@ export default function DatasetDetailPage() {
       if (itemError) { setError("Dataset work items could not be loaded."); setLoading(false); return; }
       const nextItems = (itemData ?? []) as Item[];
       setItems(nextItems);
+      setSelectedCurationItemId((current) => nextItems.some((item) => item.id === current) ? current : nextItems[0]?.id ?? "");
+
+      const [{ data: roleData }, curationResult, { data: releaseData, error: releaseError }] = await Promise.all([
+        supabase.from("research_project_members").select("role").eq("project_id", datasetData.project_id).eq("user_id", authData.user.id).maybeSingle(),
+        nextItems.length
+          ? supabase.from("dataset_item_curation_events").select("id,dataset_item_id,decision,rationale,curator_id,created_at").in("dataset_item_id", nextItems.map((item) => item.id)).order("created_at", { ascending: false })
+          : Promise.resolve({ data: [], error: null }),
+        supabase.from("dataset_releases").select("id,release_number,record_count,manifest_sha256,created_at").eq("dataset_id", datasetId).order("release_number", { ascending: false }),
+      ]);
+      if (!active) return;
+      if (curationResult.error || releaseError) { setError("Curation history or release metadata could not be loaded."); setLoading(false); return; }
+      setProjectRole((roleData?.role as ProjectRole | undefined) ?? null);
+      setCurationEvents((curationResult.data ?? []) as CurationEvent[]);
+      setReleases((releaseData ?? []) as Release[]);
 
       if (nextItems.length) {
         const { data: annotationData, error: annotationError } = await supabase.from("dataset_annotations")
@@ -110,7 +124,7 @@ export default function DatasetDetailPage() {
   }, {}), [latestAnnotations]);
 
 
-  async function recordCuration(event: React.FormEvent<HTMLFormElement>) {
+  async function recordCuration(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase || !selectedCurationItemId) return;
     if (curationDecision !== "include" && curationRationale.trim().length < 3) {
@@ -129,10 +143,12 @@ export default function DatasetDetailPage() {
       return;
     }
     setCurationRationale("");
-    const { data } = await supabase.from("dataset_item_curation_events")
-      .select("id,dataset_item_id,decision,rationale,curator_id,created_at")
-      .in("dataset_item_id", items.map((item) => item.id)).order("created_at", { ascending: false });
-    setCurationEvents((data ?? []) as CurationEvent[]);
+    if (items.length) {
+      const { data } = await supabase.from("dataset_item_curation_events")
+        .select("id,dataset_item_id,decision,rationale,curator_id,created_at")
+        .in("dataset_item_id", items.map((item) => item.id)).order("created_at", { ascending: false });
+      setCurationEvents((data ?? []) as CurationEvent[]);
+    }
     setNotice("Curation decision recorded in the append-only history.");
     setBusy(false);
   }
@@ -200,7 +216,7 @@ export default function DatasetDetailPage() {
             </section>
             <section className="rounded-xl border border-neutral-200 bg-white p-5"><h2 className="text-sm font-semibold">Dataset provenance</h2><dl className="mt-4 space-y-3 text-sm"><div><dt className="text-xs text-neutral-500">Source type</dt><dd className="mt-1 font-medium">{pretty(dataset.source_type)}</dd></div><div><dt className="text-xs text-neutral-500">Consent / rights basis</dt><dd className="mt-1 font-medium">{pretty(dataset.consent_basis)}</dd></div><div><dt className="text-xs text-neutral-500">License reference</dt><dd className="mt-1 font-medium">{dataset.license || "Not recorded"}</dd></div><div><dt className="text-xs text-neutral-500">Registered</dt><dd className="mt-1 font-medium">{date(dataset.created_at)}</dd></div></dl></section>
             <section className="rounded-xl border border-neutral-200 bg-white p-5"><h2 className="text-sm font-semibold">Annotation revisions</h2><p className="mt-1 text-xs text-neutral-500">Latest visible revision per item</p>{Object.entries(annotationCounts).length ? <ul className="mt-3 space-y-2">{Object.entries(annotationCounts).sort(([a], [b]) => a.localeCompare(b)).map(([status, count]) => <li key={status} className="flex items-center justify-between text-sm"><span className="text-neutral-600">{pretty(status)}</span><span className="font-semibold tabular-nums">{count}</span></li>)}</ul> : <p className="mt-3 text-sm text-neutral-500">No annotation revisions are visible yet.</p>}</section>
-            <section className="rounded-xl border border-amber-200 bg-amber-50 p-5"><h2 className="text-sm font-semibold text-amber-950">Release status</h2><p className="mt-2 text-sm leading-6 text-amber-900">Versioned dataset releases and controlled delivery are not implemented in this workspace. This view reports live metadata and work-item records only.</p></section>
+            <section className="rounded-xl border border-amber-200 bg-amber-50 p-5"><h2 className="text-sm font-semibold text-amber-950">Release status</h2><p className="mt-2 text-sm leading-6 text-amber-900">Immutable eligibility manifests are available. File exports, annotation-label packages and external delivery controls are not yet implemented.</p></section>
           </aside>
         </div>
       </div>
