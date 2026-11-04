@@ -36,6 +36,12 @@ create index if not exists idx_dataset_releases_dataset_created
 alter table public.dataset_item_curation_events enable row level security;
 alter table public.dataset_releases enable row level security;
 
+-- Reviews must be written through the atomic review RPC. Direct table inserts
+-- would otherwise allow a reviewer to manufacture an accepted QA decision.
+drop policy if exists "reviewers can review submitted work" on public.annotation_reviews;
+revoke insert on public.annotation_reviews from authenticated;
+
+
 drop policy if exists "project reviewers and managers can read curation history"
   on public.dataset_item_curation_events;
 create policy "project reviewers and managers can read curation history"
@@ -180,10 +186,15 @@ begin
     if not exists (
       select 1
       from public.dataset_annotations a
-      join public.annotation_reviews r on r.annotation_id = a.id
+      join lateral (
+        select r.decision
+        from public.annotation_reviews r
+        where r.annotation_id = a.id
+        order by r.created_at desc, r.id desc
+        limit 1
+      ) latest_review on latest_review.decision = 'accepted'
       where a.dataset_item_id = v_item.id
         and a.status = 'submitted'
-        and r.decision = 'accepted'
     ) then
       raise exception 'An independently accepted annotation is required' using errcode = '22023';
     end if;
@@ -298,10 +309,15 @@ begin
     join lateral (
       select an.id, an.schema_version
       from public.dataset_annotations an
-      join public.annotation_reviews review
-        on review.annotation_id = an.id and review.decision = 'accepted'
+      join lateral (
+        select r.decision, r.created_at
+        from public.annotation_reviews r
+        where r.annotation_id = an.id
+        order by r.created_at desc, r.id desc
+        limit 1
+      ) latest_review on latest_review.decision = 'accepted'
       where an.dataset_item_id = i.id and an.status = 'submitted'
-      order by an.revision desc, review.created_at desc
+      order by an.revision desc, latest_review.created_at desc
       limit 1
     ) annotation on true
     where i.dataset_id = p_dataset_id
