@@ -5,6 +5,7 @@
 
 -- Dataset membership is a governance gate: pending and quarantined assets cannot enter work queues.
 drop policy if exists "project managers can add owned clinical assets to datasets" on public.dataset_items;
+drop policy if exists "project managers can add approved owned clinical assets to datasets" on public.dataset_items;
 create policy "project managers can add approved owned clinical assets to datasets"
 on public.dataset_items for insert to authenticated
 with check (

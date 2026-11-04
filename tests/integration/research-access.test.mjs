@@ -63,6 +63,31 @@ test("assignment access: assigned researcher, reviewer and manager can inspect t
   assert.equal(await visibleRow(env.JINOX_TEST_UNRELATED_TOKEN, "dataset_items", "id", id), false);
 });
 
+
+const assetEnabled = itemEnabled && Boolean(env.JINOX_TEST_ASSIGNED_ASSET_ID);
+test("assigned researcher, reviewer and owner can read an approved dataset asset and its private object", {
+  skip: !assetEnabled ? "Set staging-only JINOX_TEST_ASSIGNED_ASSET_ID and the base authorization fixtures." : false,
+}, async () => {
+  const assetId = env.JINOX_TEST_ASSIGNED_ASSET_ID;
+  for (const token of [env.JINOX_TEST_OWNER_TOKEN, env.JINOX_TEST_RESEARCHER_TOKEN, env.JINOX_TEST_REVIEWER_TOKEN]) {
+    const client = clientFor(token);
+    const { data: asset, error } = await client.from("clinical_assets")
+      .select("id,status,storage_path").eq("id", assetId).single();
+    assert.equal(error, null, `Authorized project collaborator cannot read asset metadata: ${error?.message}`);
+    assert.equal(asset.status, "approved", "Only approved assets should be exposed to project collaborators");
+    const { data: signed, error: storageError } = await client.storage
+      .from("jinox-clinical-assets").createSignedUrl(asset.storage_path, 60);
+    assert.equal(storageError, null, `Authorized project collaborator cannot read the private object: ${storageError?.message}`);
+    assert.ok(signed?.signedUrl);
+  }
+  for (const token of [env.JINOX_TEST_VIEWER_TOKEN, env.JINOX_TEST_UNRELATED_TOKEN]) {
+    const { data, error } = await clientFor(token).from("clinical_assets")
+      .select("id").eq("id", assetId);
+    assert.equal(error, null);
+    assert.equal(data?.length ?? 0, 0, "Viewer or unrelated user must not read assigned asset metadata");
+  }
+});
+
 const annotationVars = ["JINOX_TEST_SUBMITTED_ANNOTATION_ID", "JINOX_TEST_DRAFT_ANNOTATION_ID"];
 const annotationEnabled = baseEnabled && annotationVars.every((key) => Boolean(env[key]));
 test("reviewers can read submitted annotations but not drafts; owners can inspect both", {
@@ -96,6 +121,12 @@ test("annotator cannot review their own submitted annotation", {
     review_notes: "Automated negative test; should be rejected by RLS.",
   });
   assert.ok(error, "RLS should reject self-review");
+  const { error: rpcError } = await researcher.rpc("review_dataset_annotation", {
+    p_annotation_id: annotationId,
+    p_decision: "accepted",
+    p_review_notes: "Automated negative test; should be rejected by the RPC.",
+  });
+  assert.ok(rpcError, "The review RPC must reject an annotator reviewing their own submission");
 });
 
 if (!baseEnabled) {
