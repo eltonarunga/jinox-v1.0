@@ -29,7 +29,7 @@ const sections = [
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(\`\${href}/\`);
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function SiteNavigation() {
@@ -93,10 +93,6 @@ export function SiteNavigation() {
   }
 
   const onLoginPage = pathname === "/login";
-  const accountLabel = !authReady
-    ? "Checking account…"
-    : user?.email ?? (authReady ? "Guest workspace" : "Checking account…");
-
   const navigationLinks = (
     <nav aria-label="Primary navigation" className="space-y-7">
       {sections.map((section) => (
@@ -110,9 +106,9 @@ export function SiteNavigation() {
                   <Link
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    className={\`group flex min-h-10 items-center gap-3 rounded-md px-3 text-[13px] font-medium transition-colors \${active ? "bg-neutral-900 text-white shadow-sm" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}\`}
+                    className={`group flex min-h-10 items-center gap-3 rounded-md px-3 text-[13px] font-medium transition-colors ${active ? "bg-neutral-900 text-white shadow-sm" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950"}`}
                   >
-                    <span aria-hidden="true" className={\`grid size-6 shrink-0 place-items-center rounded text-[10px] font-bold \${active ? "bg-white/15 text-white" : "bg-neutral-100 text-neutral-500 group-hover:bg-white"}\`}>{item.mark}</span>
+                    <span aria-hidden="true" className={`grid size-6 shrink-0 place-items-center rounded text-[10px] font-bold ${active ? "bg-white/15 text-white" : "bg-neutral-100 text-neutral-500 group-hover:bg-white"}`}>{item.mark}</span>
                     <span>{item.label}</span>
                     {active && <span className="ml-auto size-1.5 rounded-full bg-white" aria-hidden="true" />}
                   </Link>
@@ -143,7 +139,7 @@ export function SiteNavigation() {
           {signingOut ? "Signing out…" : "Sign out"}
         </button>
       ) : (
-        <Link href={onLoginPage ? "/" : \`/login?next=\${encodeURIComponent(pathname || "/")}\`} className="flex min-h-10 items-center justify-center rounded-md bg-neutral-900 px-3 text-xs font-semibold text-white transition hover:bg-neutral-700">
+        <Link href={onLoginPage ? "/" : `/login?next=${encodeURIComponent(pathname || "/")}`} className="flex min-h-10 items-center justify-center rounded-md bg-neutral-900 px-3 text-xs font-semibold text-white transition hover:bg-neutral-700">
           {onLoginPage ? "Back to overview" : "Sign in"}
         </Link>
       )}

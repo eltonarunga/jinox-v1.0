@@ -54,7 +54,7 @@ const workspaces = [
 
 function Status({ value }: { value: string }) {
   const tone = value === "Available" ? "bg-neutral-100 text-neutral-700" : value === "In development" ? "bg-amber-50 text-amber-800" : "bg-neutral-50 text-neutral-500";
-  return <span className={\`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold \${tone}\`}>{value}</span>;
+  return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${tone}`}>{value}</span>;
 }
 
 export default function Home() {
