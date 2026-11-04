@@ -21,7 +21,7 @@ Open `/admin/assets-review` using a global administrator account. The page lists
 
 Configure synthetic staging users and four distinct pending asset fixtures in `.env.example`:
 
-- approve, reject, quarantine and concurrency fixture IDs;
+- approve, reject, quarantine, concurrent, and admin-self-owned fixture IDs;
 - a global admin JWT, non-admin JWT and uploader JWT.
 
 Run:
