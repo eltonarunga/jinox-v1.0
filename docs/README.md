@@ -14,6 +14,7 @@ This directory contains the maintained technical, product, governance, and testi
 | Document | Audience | What it covers |
 | --- | --- | --- |
 | [Architecture](architecture/README.md) | Engineers and technical reviewers | Current implementation, system boundaries, security invariants, engineering standards |
+| [Incremental refactor plan](architecture/refactor-plan.md) | Engineers | Safe refactoring sequence and change procedure |
 | [Multimodal intake](architecture/multimodal-intake.md) | Engineers, data curators, security reviewers | Intake flow, supported records, storage model, limitations, migration checks |
 | [Annotation assignment and access](architecture/annotation-assignment-access.md) | Engineers, project owners, reviewers | Project roles, assignment permissions, RLS behavior, staging verification |
 | [Profiles, roles, and administration](architecture/profiles-roles-admin.md) | Engineers and administrators | Account access levels, protected role management, migration/bootstrap notes |
