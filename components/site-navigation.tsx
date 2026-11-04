@@ -19,7 +19,8 @@ const sections = [
   {
     label: "DATA OPERATIONS",
     items: [
-      { href: "/annotate", label: "Annotation tasks", mark: "A" },\n      { href: "/quality", label: "Quality assurance", mark: "Q" },
+      { href: "/annotate", label: "Annotation tasks", mark: "A" },
+      { href: "/quality", label: "Quality assurance", mark: "Q" },
       { href: "/training", label: "Model development", mark: "M" },
       { href: "/twin", label: "Case records", mark: "R" },
       { href: "/clinical", label: "Tools", mark: "T" },
