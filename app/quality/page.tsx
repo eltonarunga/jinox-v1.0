@@ -18,7 +18,6 @@ const pretty = (value: string) => value.replaceAll("_", " ").replace(/\\b\\w/g, 
 
 export default function QualityWorkspacePage() {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
-  const [userId, setUserId] = useState("");
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [decision, setDecision] = useState<"accepted" | "changes_requested" | "rejected">("accepted");
@@ -37,7 +36,6 @@ export default function QualityWorkspacePage() {
     try {
       const { data: auth, error: authError } = await supabase.auth.getUser();
       if (authError || !auth.user) throw new Error("Sign in to access quality assurance.");
-      setUserId(auth.user.id);
 
       const { data: datasetData, error: datasetError } = await supabase.from("research_datasets")
         .select("id,name,project_id,modality").order("created_at", { ascending: false });
