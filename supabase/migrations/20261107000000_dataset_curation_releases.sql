@@ -171,7 +171,7 @@ begin
     where a.id = v_item.clinical_asset_id;
 
     if not found or v_asset.status <> 'approved' or v_asset.checksum_sha256 is null then
-      raise exception 'The source asset must be approved and have a verified SHA-256 checksum' using errcode = '22023';
+      raise exception 'The source asset must be approved and have a recorded SHA-256 checksum' using errcode = '22023';
     end if;
 
     select c.* into v_case
@@ -282,7 +282,7 @@ begin
         'dataset_item_id', eligible.dataset_item_id,
         'asset_id', eligible.asset_id,
         'modality', eligible.modality,
-        'sha256', eligible.sha256,
+        'recorded_checksum_sha256', eligible.recorded_checksum_sha256,
         'annotation_id', eligible.annotation_id,
         'annotation_schema_version', eligible.annotation_schema_version
       ) order by eligible.dataset_item_id
@@ -293,7 +293,7 @@ begin
       i.id as dataset_item_id,
       a.id as asset_id,
       a.modality,
-      a.checksum_sha256 as sha256,
+      a.checksum_sha256 as recorded_checksum_sha256,
       annotation.id as annotation_id,
       annotation.schema_version as annotation_schema_version
     from public.dataset_items i
