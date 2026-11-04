@@ -38,6 +38,7 @@ alter table public.dataset_releases enable row level security;
 
 -- Reviews must be written through the atomic review RPC. Direct table inserts
 -- would otherwise allow a reviewer to manufacture an accepted QA decision.
+drop policy if exists "project owners can add annotation reviews" on public.annotation_reviews;
 drop policy if exists "reviewers can review submitted work" on public.annotation_reviews;
 revoke insert on public.annotation_reviews from authenticated;
 
