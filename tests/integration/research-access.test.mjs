@@ -88,6 +88,47 @@ test("assigned researcher, reviewer and owner can read an approved dataset asset
   }
 });
 
+
+const pendingAssetEnabled = baseEnabled && Boolean(env.JINOX_TEST_PENDING_ASSET_ID);
+test("asset owners cannot self-approve or rewrite uploaded asset metadata", {
+  skip: !pendingAssetEnabled ? `Set staging-only variables: ${[...missingBase, ...(!env.JINOX_TEST_PENDING_ASSET_ID ? ["JINOX_TEST_PENDING_ASSET_ID"] : [])].join(", ")}` : false,
+}, async () => {
+  const owner = clientFor(env.JINOX_TEST_OWNER_TOKEN);
+  const { data: asset, error: readError } = await owner.from("clinical_assets")
+    .select("id,case_id,owner_id,status,modality,content_type,byte_size")
+    .eq("id", env.JINOX_TEST_PENDING_ASSET_ID).single();
+  assert.equal(readError, null, `Owner fixture asset must be readable: ${readError?.message}`);
+  assert.equal(asset.status, "pending_review");
+
+  const { error: approvalError } = await owner.from("clinical_assets")
+    .update({ status: "approved", reviewed_at: new Date().toISOString() })
+    .eq("id", asset.id);
+  assert.ok(approvalError, "Authenticated asset owner must not be able to approve an upload");
+
+  const { data: afterUpdate, error: verifyError } = await owner.from("clinical_assets")
+    .select("status").eq("id", asset.id).single();
+  assert.equal(verifyError, null);
+  assert.equal(afterUpdate.status, "pending_review");
+
+  const { data: authData, error: authError } = await owner.auth.getUser();
+  assert.equal(authError, null);
+  assert.ok(authData.user?.id);
+
+  const fakeName = `${asset.modality}-2026-11-04-abcdef12.jpg`;
+  const { error: insertError } = await owner.from("clinical_assets").insert({
+    case_id: asset.case_id,
+    owner_id: authData.user.id,
+    modality: asset.modality,
+    original_filename: fakeName,
+    content_type: asset.content_type,
+    byte_size: asset.byte_size,
+    storage_path: `${authData.user.id}/${asset.case_id}/00000000-0000-4000-8000-000000000000-${fakeName}`,
+    status: "approved",
+    metadata: { filename_redacted: true, client_extension: ".jpg" },
+  });
+  assert.ok(insertError, "Authenticated uploader must not create an already-approved asset");
+});
+
 const annotationVars = ["JINOX_TEST_SUBMITTED_ANNOTATION_ID", "JINOX_TEST_DRAFT_ANNOTATION_ID"];
 const annotationEnabled = baseEnabled && annotationVars.every((key) => Boolean(env[key]));
 test("reviewers can read submitted annotations but not drafts; owners can inspect both", {
