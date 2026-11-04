@@ -207,6 +207,10 @@ export default function DatasetDetailPage() {
                 <label className="block text-sm font-medium">Rationale{curationDecision !== "include" && <span className="ml-1 text-xs text-neutral-500">(required)</span>}<textarea className="mt-1 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm" rows={3} maxLength={5000} value={curationRationale} onChange={(event) => setCurationRationale(event.target.value)} placeholder="Document the evidence or reason for this decision." /></label>
                 <button type="submit" disabled={busy || !items.length} className="w-full rounded-lg bg-neutral-900 px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy ? "Saving…" : "Record curation decision"}</button>
               </form>
+              <div className="mt-4 border-t border-neutral-100 pt-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Recent curation history</h3>
+                {curationEvents.length ? <ul className="mt-2 space-y-2">{curationEvents.slice(0, 5).map((entry) => <li key={entry.id} className="rounded-lg bg-neutral-50 p-3"><div className="flex items-center justify-between gap-2 text-xs"><span className="font-semibold">{pretty(entry.decision)}</span><span className="text-neutral-500">{date(entry.created_at)}</span></div>{entry.rationale && <p className="mt-1 text-xs leading-5 text-neutral-600">{entry.rationale}</p>}</li>)}</ul> : <p className="mt-2 text-xs text-neutral-500">No curation decisions recorded yet.</p>}
+              </div>
             </section>}
             <section className="rounded-xl border border-neutral-200 bg-white p-5">
               <div className="flex items-center justify-between gap-3"><h2 className="text-sm font-semibold">Versioned releases</h2><span className="text-xs text-neutral-500">{releases.length}</span></div>
