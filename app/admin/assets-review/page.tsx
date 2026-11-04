@@ -40,8 +40,8 @@ const modalities = [
 ];
 
 function humanSize(bytes: number) {
-  if (bytes < 1024 * 1024) return \`\${Math.max(1, Math.round(bytes / 1024))} KB\`;
-  return \`\${(bytes / (1024 * 1024)).toFixed(1)} MB\`;
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function label(value: string) {
@@ -131,7 +131,7 @@ export default function AssetReviewPage() {
     if (reviewError) {
       setError(reviewError.message);
     } else {
-      setNotice(\`\${asset.original_filename}: \${label(decision)} decision recorded.\`);
+      setNotice(`${asset.original_filename}: ${label(decision)} decision recorded.`);
       setReasons((current) => ({ ...current, [asset.id]: "" }));
       setPreviewUrls((current) => {
         const next = { ...current };
