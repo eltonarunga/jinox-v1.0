@@ -188,7 +188,7 @@ const missingReview = reviewVars.filter((key) => !env[key]);
 const reviewEnabled = missingReview.length === 0;
 
 test("only a non-owner global admin can make audited asset review decisions", {
-  skip: !reviewEnabled ? \`Set staging-only variables: \${missingReview.join(", ")}\` : false,
+  skip: !reviewEnabled ? `Set staging-only variables: ${missingReview.join(", ")}` : false,
 }, async () => {
   const admin = clientFor(env.JINOX_TEST_ASSET_REVIEW_ADMIN_TOKEN);
   const nonAdmin = clientFor(env.JINOX_TEST_ASSET_REVIEW_NON_ADMIN_TOKEN);
@@ -222,13 +222,13 @@ test("only a non-owner global admin can make audited asset review decisions", {
     ["reject", env.JINOX_TEST_ASSET_REVIEW_REJECT_ID],
     ["quarantine", env.JINOX_TEST_ASSET_REVIEW_QUARANTINE_ID],
   ]) {
-    const reason = decision === "approve" ? "Staging approval fixture." : \`Staging \${decision} fixture rationale.\`;
+    const reason = decision === "approve" ? "Staging approval fixture." : `Staging ${decision} fixture rationale.`;
     const { data, error } = await admin.rpc("review_clinical_asset", {
       p_asset_id: fixture,
       p_decision: decision,
       p_reason: reason,
     });
-    assert.equal(error, null, \`Admin \${decision} failed: \${error?.message}\`);
+    assert.equal(error, null, `Admin ${decision} failed: ${error?.message}`);
     assert.equal(data.decision, decision);
 
     const expectedStatus = decision === "approve" ? "approved" : decision === "reject" ? "rejected" : "quarantined";
@@ -256,7 +256,7 @@ test("only a non-owner global admin can make audited asset review decisions", {
 });
 
 test("concurrent review attempts produce exactly one decision and one audit row", {
-  skip: !reviewEnabled ? \`Set staging-only variables: \${missingReview.join(", ")}\` : false,
+  skip: !reviewEnabled ? `Set staging-only variables: ${missingReview.join(", ")}` : false,
 }, async () => {
   const admin = clientFor(env.JINOX_TEST_ASSET_REVIEW_ADMIN_TOKEN);
   const assetId = env.JINOX_TEST_ASSET_REVIEW_CONCURRENT_ID;
