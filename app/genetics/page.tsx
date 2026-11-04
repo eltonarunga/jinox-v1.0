@@ -29,7 +29,7 @@ export default function GeneticsWorkspacePage() {
     const { data, error: queryError } = await supabase.from("genetic_risk_studies")
       .select("id,study_name,target_phenotype,population_description,cohort_size,evidence_source,consent_and_ethics_status,analysis_plan,status,created_at")
       .order("created_at", { ascending: false });
-    if (queryError) setError(queryError.message);
+    if (queryError) setError("Research protocols could not be loaded. Refresh or check your account access.");
     else setStudies((data ?? []) as Study[]);
   }, [supabase]);
 
@@ -60,7 +60,7 @@ export default function GeneticsWorkspacePage() {
       analysis_plan: plan.trim(), status: "planning", individual_risk_prediction_enabled: false,
     });
     setBusy(false);
-    if (insertError) { setError(insertError.message); return; }
+    if (insertError) { setError("The research protocol could not be saved. Check the required fields and your account access, then try again."); return; }
     setName(""); setPopulation(""); setCohortSize(""); setEvidence(""); setPlan("");
     await refresh();
     setNotice("Study plan saved. No individual genetic score was calculated.");
