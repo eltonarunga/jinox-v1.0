@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Dataset = { id: string; name: string; modality: string; project_id: string; status: string };
@@ -72,7 +72,7 @@ export default function AnnotatePage() {
     return () => { alive = false; };
   }, [supabase]);
 
-  useEffect(() => { if (userId) void refresh(); }, [userId]); // initial load after authentication
+  useEffect(() => { if (userId) void refresh(); }, [userId, refresh]); // initial load after authentication
 
   const selectedItem = items.find(i => i.id === selectedItemId);
   const selectedAsset = assets.find(a => a.id === selectedItem?.clinical_asset_id);
@@ -95,7 +95,7 @@ export default function AnnotatePage() {
     setLabelValue(typeof currentAnnotation?.labels?.label === "string" ? currentAnnotation.labels.label : "unreviewed");
     setFinding(typeof currentAnnotation?.labels?.finding === "string" ? currentAnnotation.labels.finding : "");
     setNotes(currentAnnotation?.notes ?? "");
-  }, [selectedItemId, currentAnnotation?.id]);
+  }, [selectedItemId, currentAnnotation?.id, currentAnnotation?.labels?.label, currentAnnotation?.labels?.finding, currentAnnotation?.notes]);
 
   async function addAsset(assetId: string) {
     if (!supabase || !datasetId || !userId) return;
@@ -117,14 +117,6 @@ export default function AnnotatePage() {
     if (saveError) { setBusy(false); setError(saveError.message); return; }
     await supabase.from("dataset_items").update({ status: submit ? "submitted" : "in_progress", updated_at: new Date().toISOString() }).eq("id", selectedItemId);
     setBusy(false); setNotice(submit ? "Annotation submitted for review." : "Draft annotation saved."); await refresh(datasetId);
-  }
-
-  async function updateItemStatus(status: Item["status"]) {
-    if (!supabase || !selectedItemId) return;
-    setBusy(true); setError(""); setNotice("");
-    const { error: updateError } = await supabase.from("dataset_items").update({ status, updated_at: new Date().toISOString() }).eq("id", selectedItemId);
-    setBusy(false);
-    if (updateError) setError(updateError.message); else { setNotice("Queue status updated."); await refresh(datasetId); }
   }
 
   const includedIds = new Set(items.map(i => i.clinical_asset_id));
