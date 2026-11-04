@@ -200,7 +200,7 @@ export default function DatasetDetailPage() {
           <aside className="space-y-4">
             {canCurate && <section className="rounded-xl border border-neutral-200 bg-white p-5">
               <h2 className="text-sm font-semibold">Curation decision</h2>
-              <p className="mt-1 text-xs leading-5 text-neutral-500">Include only independently accepted items with approved source assets, consent evidence and checksums.</p>
+              <p className="mt-1 text-xs leading-5 text-neutral-500">Include only independently accepted items with approved source assets, consent evidence and recorded checksums.</p>
               <form className="mt-4 space-y-3" onSubmit={recordCuration}>
                 <label className="block text-sm font-medium">Work item<select className="mt-1 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm" value={selectedCurationItemId} onChange={(event) => setSelectedCurationItemId(event.target.value)}>{items.map((item, index) => <option key={item.id} value={item.id}>Item {String(index + 1).padStart(2, "0")} · {pretty(item.status)}</option>)}</select></label>
                 <label className="block text-sm font-medium">Decision<select className="mt-1 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm" value={curationDecision} onChange={(event) => setCurationDecision(event.target.value as typeof curationDecision)}><option value="include">Include in release candidate</option><option value="exclude">Exclude</option><option value="remediation_required">Require remediation</option></select></label>
