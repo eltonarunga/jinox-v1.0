@@ -1,3 +1,5 @@
+> **Document status: historical implementation note.** This file records the original secure research MVP implementation and migration/API examples. The standalone `/research` workspace is no longer part of the primary product navigation. Research API route groups and database structures remain in the repository, but this document must not be read as a statement that a complete Research UI or production-ready research workflow is currently shipped. For current scope and delivery priorities, see the [repository README](../README.md), [documentation index](README.md), [milestone plan](../planning.md), and [active task backlog](../tasks.md).
+
 # JinoX AI — Secure Research MVP patch
 
 This patch adds a project-scoped research metadata foundation. It does **not** implement or validate the proposal's multimodal foundation model, digital twin, genomic risk model, clinical diagnostic model, or climate-health predictions.
