@@ -57,7 +57,7 @@ export default function AdminDashboardPage() {
     <div className="mx-auto max-w-6xl">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div><Link href="/" className="text-sm font-bold text-slate-950">JinoX AI</Link><p className="mt-2 text-xs font-semibold uppercase tracking-[.16em] text-slate-500">Platform administration</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Admin dashboard</h1><p className="mt-2 text-sm text-slate-500">Manage user profiles and access levels.</p></div>
-        <button onClick={() => void load()} className="rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white">Refresh</button>
+        <div className="flex flex-wrap gap-2"><Link href="/admin/assets-review" className="border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-slate-50">Asset review queue</Link><button onClick={() => void load()} className="rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white">Refresh</button></div>
       </header>
 
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p>}
