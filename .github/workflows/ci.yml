@@ -5,6 +5,15 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
+# CI only needs to read repository contents. Keep the default token least-privileged.
+permissions:
+  contents: read
+
+# Avoid wasting runner capacity on superseded commits for the same branch/PR.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     name: Lint, Type Check & Build
@@ -21,7 +30,7 @@ jobs:
           cache: "npm"
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Unit Tests
         run: npm run test:unit
