@@ -35,7 +35,7 @@ on public.clinical_asset_reviews
 for select to authenticated
 using ((select public.current_profile_role()) = 'admin');
 
-revoke all on public.clinical_asset_reviews from public, anon;
+revoke all on public.clinical_asset_reviews from public, anon, authenticated;
 grant select on public.clinical_asset_reviews to authenticated;
 
 create or replace function public.prevent_clinical_asset_review_mutation()
