@@ -12,7 +12,11 @@ export function getPublicSupabaseConfig(): PublicSupabaseConfig | null {
 
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
+    const isLoopback = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+    const isSecure = parsed.protocol === "https:";
+    const isLocalDevelopment = parsed.protocol === "http:" && isLoopback;
+
+    if ((!isSecure && !isLocalDevelopment) || parsed.username || parsed.password) {
       return null;
     }
   } catch {
