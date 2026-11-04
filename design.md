@@ -1,314 +1,212 @@
-# JinoX AI — Product & Design Specification
+# JinoX AI — Product and UX specification
 
-> Purpose: establish a shared product, interaction, and visual-design direction for JinoX AI. This is a design contract for future implementation, not a claim that every described screen or capability already exists.
+**Status:** Active product design direction  
+**Last reviewed:** 2026-11-04  
+**Source of truth:** [Product operating model](docs/product/operating-model.md)
 
 ## 1. Product north star
 
-JinoX AI is building data infrastructure for East African oral-health research. Its first job is to help authorized teams **register, govern, curate, annotate, review, version, and securely share research datasets**.
+JinoX AI is an AI data operations platform and managed data services business, inspired by the data-centric operating model of companies such as Scale AI. It helps customers and research teams turn raw oral and craniofacial health data into reliable, traceable datasets and model-ready assets.
 
-The long-term scientific vision includes multimodal oral-health datasets, foundational models, biological simulation, genomics, low-resource deployment, and climate-health intelligence. Those are research directions and potential future capabilities—not features to imply are available or clinically validated today.
+The primary product lifecycle is:
 
-### Product promise
+**Collect → Curate → Annotate → Review / QA → Package and deliver → Prepare, train, and evaluate models**
 
-**Make high-quality, responsibly governed oral-health data easier to produce and reuse.**
+JinoX's initial specialization is oral and craniofacial health in an East African research context. The analogy to Scale AI is about the business and operating model only; JinoX is not affiliated with Scale AI and does not claim equivalent scale or capabilities.
 
-A successful user should be able to answer:
-- What data is in this project, and where did it come from?
-- Is its use authorized for this purpose?
-- What work remains before it can be released?
-- Who annotated and reviewed it, under which guideline version?
-- What quality limitations should a downstream researcher know?
-- Who accessed or exported the dataset?
+The current repository is an early prototype. The design describes the target product and must not imply that every workflow is already implemented.
 
-### Out of scope for the current product
+## 2. Product promise
 
-- Autonomous diagnosis or treatment recommendations.
-- Presenting experimental models, genomic risk estimates, or digital-twin outputs as validated clinical tools.
-- Treating a record count as proof of dataset quality.
-- Making patient-derived files public by default.
-- Claiming a dataset is open-access before rights, consent, ethics, and release terms have been verified.
+**Make high-quality domain data easier to collect, annotate, validate, deliver, and use to develop AI.**
 
-## 2. Users and jobs to be done
+A successful customer or project team should be able to answer:
+- What data was collected, from which source, and under what permitted use?
+- What is the current curation and annotation status?
+- Which work is assigned, submitted, reviewed, or awaiting adjudication?
+- How reliable are the labels, and how was quality measured?
+- What dataset version was delivered, to whom, and with which limitations?
+- Which exact dataset version and configuration were used to train/evaluate a model?
+
+## 3. Users and operating roles
 
 | User | Primary job | Design priority |
 | --- | --- | --- |
-| Project owner / principal investigator | Set up a project, govern access, oversee quality and approve release | Clear project health, ownership, approvals and audit trail |
-| Data curator | Intake, pseudonymize where appropriate, check completeness and resolve data issues | Efficient queues, actionable validation errors and provenance |
-| Annotator / researcher | Complete assigned work consistently using documented guidelines | Focused annotation workspace, minimal distractions and visible instructions |
-| Independent reviewer | Assess submitted labels, record disagreements and request corrections | Clear evidence, explicit review criteria and no self-review |
-| Data steward / ethics lead | Verify permitted use, consent or waiver, retention and sharing constraints | Governance status and traceable decisions |
-| Dataset consumer | Discover released datasets, understand limitations and request permitted access | Trustworthy metadata, quality reports and transparent licensing |
+| Customer / project owner | Define scope, deliverables, acceptance criteria, and access | Project status, deliverables, governance, auditability |
+| Project manager | Coordinate collection, curation, assignments, QA, and delivery | Work queues, workload, blockers, deadlines |
+| Data curator | Validate, normalize, and prepare source data | Efficient intake, remediation, provenance |
+| Annotator / domain expert | Complete assigned work consistently | Focused workspace, clear guidelines, minimal friction |
+| Independent reviewer | Assess submitted labels and record decisions | Review rubric, evidence, independence |
+| Quality lead / adjudicator | Resolve disagreements and monitor quality | Sampling, agreement, adjudication history |
+| ML engineer / researcher | Prepare datasets, train models, and evaluate results | Versioned datasets, reproducibility, metrics |
+| Data steward / administrator | Govern permitted use, privacy, access, and retention | Approval evidence, audit, controlled access |
 
-A person may hold more than one role across different projects. Permissions must be project-scoped and enforced by the server and database—not inferred from UI visibility alone.
+A person may hold multiple roles across projects. Permissions must be project-scoped and enforced by the server and database, not inferred from UI visibility.
 
-## 3. Information architecture
+## 4. Information architecture
 
-Keep the primary navigation small and task-oriented:
+The primary navigation should follow the operating lifecycle:
 
-1. **Overview** — work in progress, review backlog, recent activity, governance blockers.
-2. **Projects** — project purpose, team, access, governance, and linked datasets.
-3. **Datasets** — dataset metadata, intake status, curation, annotations, review, versions.
-4. **Tasks** — work assigned to the current user, due dates if configured, and task status.
-5. **Quality & Releases** — quality sampling, disagreement/adjudication summaries, release manifests and version history.
-6. **Audit & Governance** — permissions, approvals, access/export events, retention and withdrawal records; visible only to authorized roles.
-7. **Settings** — profile, organization and project-level preferences permitted to the current user.
+1. **Overview** — work in progress, collection status, annotation/review backlog, quality alerts, and delivery blockers.
+2. **Projects / Customers** — project purpose, team, scope, governance, deliverables, and activity.
+3. **Data Collection** — upload/import, collection batches, source metadata, validation, and remediation.
+4. **Datasets** — inventory, curation, modality, inclusion criteria, versions, and lifecycle status.
+5. **Annotation Tasks** — task templates, work queues, assignments, annotation workspace, and guideline versions.
+6. **Quality Assurance** — reviewer queue, sampling, disagreement, adjudication, and quality reports.
+7. **Dataset Delivery** — release gates, manifests, exports, access grants, and delivery history.
+8. **Model Development** — dataset splits, training jobs, experiment tracking, evaluation, and model artifacts.
+9. **Workforce & Administration** — qualification, capacity, permissions, governance, and operational settings; expose only when implemented and authorized.
 
-Do not show navigation items that a user cannot access, but still enforce all access rules server-side. Use clear empty states to explain how an authorized user can begin.
+Navigation may be consolidated in the prototype, but the underlying product structure should preserve these distinct domain responsibilities. Do not keep a separate generic Research workspace as the primary product identity.
 
-## 4. Core workflows
+## 5. Core workflows
 
-### 4.1 Project setup
+### 5.1 Customer and project onboarding
+1. Create an organization/customer and project.
+2. Define use case, modality, expected volume, annotation task, deliverable, quality criteria, and target schedule.
+3. Record data ownership, lawful basis, ethics/consent requirements, retention, permitted use, and transfer constraints.
+4. Assign project roles and establish approval gates.
+5. Keep intake blocked until the required controls are verified.
 
-1. Enter a clear project name and research purpose.
-2. Record responsible institution, data steward, ethics determination, consent or other lawful basis, permitted use, retention and sharing constraints.
-3. Invite collaborators and assign the minimum required project roles.
-4. Keep the project in a blocked or pending-governance state until required information is reviewed.
-5. Show outstanding requirements as a checklist with owners and timestamps.
+### 5.2 Data collection and intake
+1. Collect through secure uploads, structured capture, approved APIs, or partner/field workflows.
+2. Register source, collection method, modality, provenance, rights, consent/legal basis, and project.
+3. Validate file signature, schema, metadata, duplicate identifiers, completeness, and de-identification status.
+4. Quarantine invalid or unreviewed assets.
+5. Show collection progress and actionable remediation tasks.
 
-A checkbox or self-attestation is not proof of formal ethics approval. Store the approval reference and review status according to the project's governance process.
+### 5.3 Curation
+1. Normalize supported formats and metadata.
+2. Detect duplicates, missing values, corrupted assets, and out-of-scope records.
+3. Apply project inclusion/exclusion criteria.
+4. Preserve source lineage and curator changes.
+5. Generate a curated dataset candidate and quality summary.
 
-### 4.2 Dataset registration and intake
+### 5.4 Annotation operations
+1. Define task type, label taxonomy, schema, rubric, guideline version, examples, and uncertainty rules.
+2. Split eligible data into assignable work units.
+3. Assign work to appropriately qualified annotators/domain experts.
+4. Provide modality-appropriate annotation tools and clear save/submit states.
+5. Preserve drafts, submitted revisions, annotator provenance, and corrections.
 
-1. Register dataset metadata: name, description, modality, source type, license/rights status, record-count estimate and associated project.
-2. Display the current authorization and readiness state.
-3. Upload or import data through an authorized intake path.
-4. Validate file type, size, structure, duplicate identifiers, required metadata and provenance.
-5. Record issues and allow authorized curators to resolve them without erasing the original audit history.
+### 5.5 Quality assurance
+1. Route submitted work to independent reviewers.
+2. Apply defined sampling and reference-item procedures where appropriate.
+3. Capture acceptance, rejection, change request, uncertainty, and disagreement.
+4. Adjudicate unresolved disagreements and preserve all decisions.
+5. Gate delivery on explicit quality criteria and governance approval.
 
-Use terms such as **registered**, **intake in progress**, **needs attention**, and **curation complete**. Avoid implying clinical validity from an intake status.
+### 5.6 Dataset delivery
+1. Create an immutable dataset version.
+2. Include manifest, checksums, schema/guideline versions, provenance, quality report, and limitations.
+3. Confirm customer access rights, permitted use, recipient, and delivery format.
+4. Generate a controlled export and record access, delivery, expiry, and withdrawal obligations.
 
-### 4.3 Annotation and review
+### 5.7 Model development
+1. Select an approved dataset release.
+2. Define preprocessing and train/validation/test split strategy.
+3. Run leakage checks, including patient-level separation where appropriate.
+4. Track code, configuration, compute environment, dataset version, model version, and evaluation protocol.
+5. Evaluate with defined cohorts, uncertainty, subgroup coverage, and limitations.
 
-1. A project manager assigns eligible items to a qualified researcher.
-2. The annotator sees only authorized assigned work and the current guideline/schema version.
-3. The annotator records labels, optional notes, and a reason for uncertainty when appropriate.
-4. Submission freezes that annotation revision for independent review.
-5. A reviewer who is not the original annotator accepts the work, requests changes, or records a disagreement.
-6. Disputed labels go through an explicit adjudication path; preserve prior revisions and decisions.
+**Current boundary:** the app has a training-preparation surface only. Training execution, experiment orchestration, evaluation pipelines, and model registry are target capabilities, not current shipped features.
 
-Show the distinction between **not started**, **in progress**, **submitted**, **changes requested**, **reviewed**, and **adjudicated**. Avoid ambiguous status labels such as “done” when review is still pending.
+## 6. Key screens
 
-### 4.4 Dataset release
+### Overview
+Prioritize actionable work:
+- Collection batches requiring attention.
+- Curation issues and dataset readiness.
+- Annotation assignments and submission status.
+- Reviewer backlog and adjudication blockers.
+- Dataset releases awaiting approval or delivery.
+- Model jobs and evaluations only when real pipeline data exists.
 
-A release is a deliberate, permissioned action—not a side effect of completing annotation.
-
-Before release, present a review screen covering:
-- governance and permitted-use approval;
-- dataset scope and inclusion/exclusion criteria;
-- label dictionary and guideline versions;
-- quality checks and relevant inter-annotator agreement;
-- unresolved disagreement and adjudication counts;
-- duplicate/leakage checks and split methodology where relevant;
-- provenance, version identifier, manifest and checksums;
-- known limitations, representation gaps and intended uses;
-- license, access restrictions, retention/withdrawal obligations and approver.
-
-If a required gate is incomplete, disable release and explain exactly what is missing. Never silently downgrade a release gate.
-
-## 5. Key screens and layout
-
-### Overview dashboard
-
-Prioritize work over vanity metrics:
-- **Needs your action:** assignments, review requests, missing governance evidence.
-- **Project status:** stage, owner, next milestone and blockers.
-- **Dataset pipeline:** registered → intake → curation → annotation → review → release.
-- **Recent audit activity:** concise events with timestamps and actor identity.
-- **Quality signals:** clearly scoped counts and measures, with definitions and denominators.
-
-Do not show invented impact statistics, model accuracy, or aggregate counts unless derived from real data and labelled with the relevant time range.
+Avoid vanity metrics and invented volume, accuracy, or impact claims.
 
 ### Project workspace
+Use tabs such as Overview, Collection, Datasets, Tasks, Quality, Deliverables, Team, Governance, and Activity. Show the owner, purpose, status, scope, and blockers.
 
-Use a consistent project header containing project name, status, owner and access scope. Tabs may include Overview, Datasets, Team & Access, Governance, and Activity. Make governance blockers visible without overwhelming the routine workflow.
+### Collection workspace
+Support batch-based intake with progress, validation results, source metadata, duplicate detection, and remediation. Keep sensitive source content out of general activity feeds and browser URLs.
 
 ### Dataset workspace
-
-Use a dataset header with modality, source, project, lifecycle status and version. A secondary navigation can separate:
-- Summary
-- Items / intake
-- Curation issues
-- Annotation
-- Review & adjudication
-- Quality
-- Versions & exports
-- Governance / activity
-
-Keep metadata separate from sensitive source content. Do not place patient identifiers in titles, breadcrumbs, browser URLs, toast notifications, or general activity feeds.
+Separate Summary, Items, Curation, Annotation, Quality, Versions, Delivery, and Governance. Clearly distinguish registered, collecting, curating, annotation-ready, in annotation, QA, approved, released, and archived states.
 
 ### Annotation workspace
+Show one authorized work item at a time, relevant evidence, persistent guideline/schema version, label controls, uncertainty options, save state, and explicit submission. Never silently submit.
 
-Optimize for careful, repeatable work:
-- One item and its permitted evidence at a time.
-- Persistent guideline and schema version.
-- Labels grouped by task, with keyboard navigation where safe and accessible.
-- Clear save state and explicit submit action.
-- A visible uncertainty / flag-for-review mechanism where the task supports it.
-- No accidental submission from keyboard shortcuts.
-- No access to another annotator's private drafts unless the workflow explicitly authorizes it.
+### QA workspace
+Show submitted annotation, evidence, rubric, and review decisions. Prevent self-review in both UI and authorization logic. Preserve rationale and decision history.
 
-### Review workspace
+### Model development workspace
+Display selected dataset version, split configuration, training status, resource usage, experiment metadata, evaluation results, and limitations. Do not show fabricated progress or metrics.
 
-Show the submitted annotation, required evidence, rubric, and review actions. Separate factual correction from reviewer opinion. Require a reason for rejection or requested changes when configured. Prevent self-review both in the interface and at the authorization layer.
+## 7. Visual design direction
 
-### Dataset catalogue and release details
+JinoX should feel like professional data operations software: scientific, precise, calm, operationally efficient, and trustworthy.
 
-Only show released datasets to catalogue audiences authorized by their access terms. Each dataset detail page should explain:
-- scope and modality;
-- provenance and collection context;
-- label schema and version;
-- quality report and limitations;
-- permitted use and access process;
-- release date, version and checksum;
-- contact or steward role, without exposing private personal contact details by default.
+- Use the existing restrained monochrome visual system.
+- Build hierarchy with typography, spacing, borders, and neutral surfaces.
+- Keep dense tables readable with filters, clear statuses, responsive overflow, and persistent headers where useful.
+- Use charts only for real operational or scientific questions; show units, cohort, denominator, time range, and missingness.
+- Avoid decorative AI gradients, glowing effects, vanity metrics, and excessive animation.
+- Keep repeated annotation actions fast, accessible, and keyboard-friendly.
 
-## 6. Visual design direction
+## 8. Interaction and content rules
 
-### Brand character
-
-- **Scientific:** precise, calm, evidence-led.
-- **African-context-aware:** represent Kenya and East Africa as research leaders, not merely as a source of data.
-- **Trustworthy:** governance and limitations are visible, not hidden in footnotes.
-- **Modern and restrained:** polished research software, not a consumer-health marketing page.
-- **Accessible:** clarity and legibility take precedence over decoration.
-
-### Suggested visual system
-
-The application uses a deliberately restrained black, white and neutral-gray palette. Hierarchy comes from typography, spacing, borders and surface contrast—not saturated accent colors, gradients or decorative effects.
-
-| Token | Value | Usage |
-| --- | --- | --- |
-| Primary | Near-black #090909 | Primary actions, active navigation and key emphasis |
-| Secondary | Charcoal #171717 | Headings and high-priority text |
-| Canvas | White #FFFFFF | Main application background |
-| Surface | Soft white #FAFAFA | Secondary panels and quiet work areas |
-| Text | Near-black #171717 | Main content |
-| Muted text | Neutral gray #737373 | Supporting labels and metadata |
-| Border | Light gray #E5E5E5 | Dividers, tables and field outlines |
-| Subtle surface | Neutral #F5F5F5 | Hover states, quiet status panels and selected rows |
-| Focus | Black #090909 | Visible keyboard focus indicator |
-
-Use monochrome status treatments with explicit text and accessible icons. Permission, risk, validation and quality states must never depend on hue alone. Validate contrast against WCAG 2.2 AA. Avoid excessive gradients, glassmorphism, glowing AI effects, saturated status colors and decorative charts that obscure real work.
-
-### Typography and spacing
-
-- Use a highly legible sans-serif already available in the project; avoid adding a font dependency without a clear benefit.
-- Establish a compact, consistent type scale: page title, section heading, body, helper text and metadata.
-- Use a spacing scale based on 4px increments.
-- Keep dense tables readable with clear column labels, row actions, responsive overflow and persistent headers where useful.
-- Use charts only when they answer a real operational or scientific question; label units, time range, denominator and missing data.
-
-### Components
-
-Build on existing components before introducing a new UI library. Standardize:
-- App shell and navigation
-- Page header and breadcrumbs
-- Status badge with text label
-- Summary metric with source/period
-- Data table with loading, empty and error states
-- Filter/search controls
-- Form field with helper/error text
-- Confirmation dialog for destructive or irreversible actions
-- Activity/audit timeline
-- Governance checklist
-- Annotation label controls
-- Review decision panel
-- Version and release manifest panel
-- Permission-aware action menu
-
-## 7. Interaction and content rules
-
-- Prefer explicit verbs: **Register dataset**, **Assign items**, **Submit annotation**, **Request changes**, **Approve release**, **Export dataset**.
+- Use explicit verbs: **Create project**, **Collect data**, **Curate records**, **Assign tasks**, **Submit annotation**, **Review labels**, **Approve dataset**, **Deliver dataset**, **Run training**, **Evaluate model**.
 - Explain why an action is unavailable and what permission or requirement is missing.
-- Use confirmation dialogs for removal, release, withdrawal, and exports of sensitive data.
-- Show save state and distinguish saved drafts from submitted work.
-- Preserve user input after validation errors where safe.
-- Use optimistic UI only for reversible, low-risk actions. For permission changes, review decisions, release and export, wait for server confirmation.
-- Never expose raw database errors, access tokens, signed URLs, internal stack traces, or sensitive metadata in user-facing messages.
-- Use neutral, non-stigmatizing language for disease labels and patient context.
-- Do not describe AI-generated labels as ground truth; preserve provenance and human review status.
+- Confirm irreversible actions such as deletion, release, export, and withdrawal.
+- Distinguish draft, submitted, reviewed, adjudicated, released, and delivered states.
+- Do not describe AI-generated labels as ground truth.
+- Never expose SQL errors, tokens, signed URLs, stack traces, or sensitive metadata.
+- Show real source-backed metrics only, with definitions and denominators.
 
-## 8. Privacy, security and trust by design
+## 9. Privacy, security, and trust
 
-- Patient-derived assets remain private by default.
-- Pseudonymized data is still sensitive data; do not label it anonymous unless that conclusion has been formally established.
-- Verify identity, project membership, role, purpose and asset-level authorization server-side before data access.
-- Use Row Level Security as a defense-in-depth control and test cross-project isolation with separate accounts.
-- Use short-lived signed URLs for private files; do not persist them in records, logs, analytics, or browser-visible audit trails.
-- Minimize data in notifications, URLs, analytics and logs.
-- Record access, assignment, annotation revision, review, release, and export events with actor, timestamp, object, action and outcome.
-- Apply retention, withdrawal and deletion rules to originals, derived files, exports and downstream obligations.
-- Keep commercial contributor compensation separate from clinical labels, reviewer decisions and quality metrics.
+- Patient-derived data remains private by default.
+- Pseudonymized data is still sensitive data.
+- Verify identity, project membership, purpose, role, and asset-level authorization server-side.
+- Use RLS as defense in depth and test cross-project isolation.
+- Use short-lived signed URLs and never persist them in logs or analytics.
+- Record collection, curation, assignment, annotation, review, release, export, and model-run lineage.
+- Keep contributor identity and compensation separate from patient records and annotation judgments.
+- Apply retention, withdrawal, and deletion requirements to source and derived data.
+- Do not train on data unless the project terms and approvals explicitly permit that use.
 
-## 9. Accessibility and responsive behavior
+## 10. Operational measures
 
-- Target WCAG 2.2 AA.
-- Ensure complete keyboard access, visible focus, logical heading order, labelled form controls and accessible validation feedback.
-- Use semantic HTML and announce async status changes to assistive technology.
-- Do not rely on hover alone to expose important actions.
-- At small widths, collapse navigation predictably, preserve primary actions and convert wide tables into deliberate responsive views rather than silently hiding important columns.
-- Respect reduced-motion preferences and avoid animation that slows repeated annotation tasks.
-
-## 10. Loading, empty, error and restricted states
-
-Every major data screen must design for:
-- **Loading:** stable skeleton or progress indicator without fake values.
-- **Empty:** explain why the list is empty and the next authorized action.
-- **Partial:** show what loaded and what failed; do not imply completeness.
-- **Validation error:** identify the field and a practical correction.
-- **Permission denied:** explain that access is unavailable without revealing whether a sensitive record exists.
-- **Expired session / signed URL:** provide a safe retry path without exposing credentials.
-- **Network failure:** preserve unsent work where safe and make retry behavior explicit.
-- **Governance blocked:** show missing requirements and who can resolve them.
-- **Conflict:** if a record changed elsewhere, explain the conflict and avoid overwriting another user's work.
-
-## 11. Measurement
-
-Use operational measures that improve quality and safety:
+Track measures that improve data quality and delivery:
+- Collection completeness and provenance coverage.
 - Intake rejection and remediation rates.
-- Time from intake to curation completion.
-- Annotation completion and reviewer turnaround.
-- Inter-annotator agreement with the metric and sample definition stated.
+- Curation cycle time and unresolved issues.
+- Annotation throughput alongside acceptance/rework rates.
+- Reviewer turnaround and independent agreement.
 - Disagreement and adjudication rates.
-- Missing provenance/governance evidence.
-- Export approvals, denials and audit completeness.
-- Accessibility and cross-project authorization test results.
+- Dataset coverage, missingness, and representation gaps.
+- Delivery acceptance and reproducibility.
+- Training reproducibility, leakage checks, and evaluation validity.
 
-Do not optimize solely for records processed per hour. Quality, representativeness, lawful use, reviewer independence and downstream usability matter more than raw throughput.
+Do not optimize solely for items processed per hour.
 
-## 12. Delivery sequence
+## 11. Delivery sequence
 
-### Now — trustworthy data operations
-- Align app navigation and copy with the dataset-first scope.
-- Standardize project and dataset views.
-- Implement governed intake and clear lifecycle states.
-- Add role-aware assignment, annotation, review and audit surfaces.
-- Ensure private storage and authorization checks match the UX.
+**Now:** secure collection, project authorization, dataset inventory, provenance, curation, and annotation assignment.
 
-### Next — quality and controlled release
-- Version annotation guidelines and labels.
-- Add disagreement/adjudication history and quality reports.
-- Create immutable dataset manifests and controlled export flows.
-- Add integration tests for RLS, signed URLs, exports and role boundaries.
+**Next:** full annotation workspaces, independent QA, adjudication, quality reporting, versioned dataset releases, and controlled customer delivery.
 
-### Later — research intelligence
-- AI-assisted pre-labeling with human verification and provenance.
-- Multimodal dataset discovery and research APIs.
-- Carefully validated research models, environmental analysis, genomics and simulation capabilities.
-- Low-resource deployment only after appropriate clinical validation, safety review and regulatory assessment.
+**Then:** reproducible dataset splits, training orchestration, experiment tracking, evaluation, and model registry.
 
-## 13. Definition of done for design changes
+**Later / gated:** workforce scale operations, customer commercial tooling, AI-assisted annotation, and advanced scientific AI.
 
-A significant UI workflow is ready when:
-- Its intended user and permission requirements are documented.
-- Loading, empty, error, restricted and success states are designed.
-- Sensitive data exposure has been reviewed.
+## 12. Definition of done
+
+A significant workflow is ready when:
+- User role, permissions, and acceptance criteria are documented.
+- Loading, empty, error, restricted, and success states are designed.
+- Sensitive-data exposure and data-use permissions are reviewed.
 - Keyboard and responsive behavior are usable.
-- Labels and metrics are defined and not fabricated.
-- Server/database authorization matches the visible affordances.
-- Relevant automated tests and a Vercel preview have been checked.
-- Documentation describes any remaining limitations.
-
----
-
-**Design principle:** JinoX should make responsible research data operations feel clear and efficient without making sensitive health data, uncertain labels, or unvalidated science appear simpler or more certain than they are.
+- Server/database authorization matches the UI.
+- Relevant automated tests and a deployment preview have been checked.
+- Documentation distinguishes implemented behavior from remaining gaps.
