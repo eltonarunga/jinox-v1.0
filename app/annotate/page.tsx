@@ -115,9 +115,13 @@ export default function AnnotatePage() {
   const canManage = userRole === "owner" || userRole === "principal_investigator";
   const canReview = canManage || userRole === "reviewer";
   const canAnnotate = userRole === "researcher" && selectedItem?.assigned_to === userId;
-  const currentAnnotation = annotations
+  const latestOwnAnnotation = annotations
+    .filter((annotation) => annotation.dataset_item_id === selectedItemId && annotation.annotator_id === userId && annotation.status !== "superseded")
+    .sort((a, b) => b.revision - a.revision)[0];
+  const currentDraft = annotations
     .filter((annotation) => annotation.dataset_item_id === selectedItemId && annotation.annotator_id === userId && annotation.status === "draft")
     .sort((a, b) => b.revision - a.revision)[0];
+  const annotationForEditing = currentDraft ?? latestOwnAnnotation;
   const submittedAnnotation = annotations
     .filter((annotation) => annotation.dataset_item_id === selectedItemId && annotation.status === "submitted")
     .sort((a, b) => b.revision - a.revision)[0];
@@ -141,10 +145,10 @@ export default function AnnotatePage() {
   }, [supabase, selectedAsset?.storage_path]);
 
   useEffect(() => {
-    setLabelValue(typeof currentAnnotation?.labels?.label === "string" ? currentAnnotation.labels.label : "unreviewed");
-    setFinding(typeof currentAnnotation?.labels?.finding === "string" ? currentAnnotation.labels.finding : "");
-    setNotes(currentAnnotation?.notes ?? "");
-  }, [selectedItemId, currentAnnotation?.id, currentAnnotation?.labels?.label, currentAnnotation?.labels?.finding, currentAnnotation?.notes]);
+    setLabelValue(typeof annotationForEditing?.labels?.label === "string" ? annotationForEditing.labels.label : "unreviewed");
+    setFinding(typeof annotationForEditing?.labels?.finding === "string" ? annotationForEditing.labels.finding : "");
+    setNotes(annotationForEditing?.notes ?? "");
+  }, [selectedItemId, annotationForEditing?.id, annotationForEditing?.labels?.label, annotationForEditing?.labels?.finding, annotationForEditing?.notes]);
 
   async function addAsset(assetId: string) {
     if (!supabase || !datasetId || !userId || !canManage) return;
@@ -324,7 +328,7 @@ export default function AnnotatePage() {
                   <label className="block text-sm font-medium">Primary label<select className={field} value={labelValue} onChange={(event) => setLabelValue(event.target.value)}><option value="unreviewed">Unreviewed / uncertain</option><option value="caries_present">Caries present</option><option value="caries_absent">Caries absent</option><option value="fluorosis_present">Fluorosis present</option><option value="fluorosis_absent">Fluorosis absent</option><option value="periodontal_findings">Periodontal findings</option><option value="oral_mucosal_finding">Oral mucosal finding</option><option value="not_assessable">Not assessable</option><option value="other">Other</option></select></label>
                   <label className="block text-sm font-medium">Structured finding<textarea className={field} rows={4} maxLength={3000} value={finding} onChange={(event) => setFinding(event.target.value)} placeholder="Describe visible findings, region, uncertainty, or annotation rationale." /></label>
                   <label className="block text-sm font-medium">Annotator notes<textarea className={field} rows={3} maxLength={5000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional context; do not include direct identifiers." /></label>
-                  {currentAnnotation && <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">Draft revision: {currentAnnotation.revision}</p>}
+                  {annotationForEditing && <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">{currentDraft ? "Draft revision" : "Previous submitted revision"}: {annotationForEditing.revision}. Use this as context when responding to a change request.</p>}
                   <div className="flex flex-wrap gap-2"><button className={button} type="submit" disabled={busy}>{busy ? "Saving…" : "Save draft"}</button><button className={secondary} type="button" disabled={busy} onClick={() => void saveAnnotation(true)}>Submit for independent review</button></div>
                 </form> : canReview && submittedAnnotation && selectedItem.status === "submitted" ? <form className="space-y-4 border-t border-slate-100 pt-5" onSubmit={(event) => { event.preventDefault(); void reviewAnnotation(); }}>
                   <div><p className="text-xs font-bold uppercase tracking-wider text-slate-500">Independent quality assurance</p><h2 className="mt-1 text-lg font-semibold">Review submitted annotation</h2><p className="mt-1 text-sm text-slate-500">Revision {submittedAnnotation.revision} · annotator {submittedAnnotation.annotator_id.slice(0, 8)}…</p></div>
