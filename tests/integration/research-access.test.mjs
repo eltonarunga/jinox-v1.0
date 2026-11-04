@@ -173,3 +173,131 @@ test("annotator cannot review their own submitted annotation", {
 if (!baseEnabled) {
   test("base integration prerequisites", { skip: `Set staging-only variables: ${missingBase.join(", ")}` }, () => {});
 }
+
+
+const reviewVars = [
+  "JINOX_TEST_ASSET_REVIEW_ADMIN_TOKEN",
+  "JINOX_TEST_ASSET_REVIEW_NON_ADMIN_TOKEN",
+  "JINOX_TEST_ASSET_REVIEW_OWNER_TOKEN",
+  "JINOX_TEST_ASSET_REVIEW_ADMIN_SELF_OWNED_ID",
+  "JINOX_TEST_ASSET_REVIEW_APPROVE_ID",
+  "JINOX_TEST_ASSET_REVIEW_REJECT_ID",
+  "JINOX_TEST_ASSET_REVIEW_QUARANTINE_ID",
+  "JINOX_TEST_ASSET_REVIEW_CONCURRENT_ID",
+];
+const missingReview = reviewVars.filter((key) => !env[key]);
+const reviewEnabled = missingReview.length === 0;
+
+test("only a non-owner global admin can make audited asset review decisions", {
+  skip: !reviewEnabled ? `Set staging-only variables: ${missingReview.join(", ")}` : false,
+}, async () => {
+  const admin = clientFor(env.JINOX_TEST_ASSET_REVIEW_ADMIN_TOKEN);
+  const nonAdmin = clientFor(env.JINOX_TEST_ASSET_REVIEW_NON_ADMIN_TOKEN);
+  const owner = clientFor(env.JINOX_TEST_ASSET_REVIEW_OWNER_TOKEN);
+
+  const { data: adminUser, error: adminAuthError } = await admin.auth.getUser();
+  assert.equal(adminAuthError, null);
+  assert.ok(adminUser.user?.id);
+
+  const { error: adminSelfReview } = await admin.rpc("review_clinical_asset", {
+    p_asset_id: env.JINOX_TEST_ASSET_REVIEW_ADMIN_SELF_OWNED_ID,
+    p_decision: "approve",
+    p_reason: "Administrator self-review must fail.",
+  });
+  assert.ok(adminSelfReview, "An administrator must not review their own uploaded asset");
+
+  const { error: nonAdminAttempt } = await nonAdmin.rpc("review_clinical_asset", {
+    p_asset_id: env.JINOX_TEST_ASSET_REVIEW_APPROVE_ID,
+    p_decision: "approve",
+    p_reason: "Non-admin review must fail.",
+  });
+  assert.ok(nonAdminAttempt, "Non-admin users must not review assets");
+
+  const { error: ownerUpdate } = await owner.from("clinical_assets")
+    .update({ status: "approved", reviewed_at: new Date().toISOString() })
+    .eq("id", env.JINOX_TEST_ASSET_REVIEW_APPROVE_ID);
+  assert.ok(ownerUpdate, "Uploader must not directly update asset review state");
+
+  for (const [decision, fixture] of [
+    ["approve", env.JINOX_TEST_ASSET_REVIEW_APPROVE_ID],
+    ["reject", env.JINOX_TEST_ASSET_REVIEW_REJECT_ID],
+    ["quarantine", env.JINOX_TEST_ASSET_REVIEW_QUARANTINE_ID],
+  ]) {
+    const reason = decision === "approve" ? "Staging approval fixture." : `Staging ${decision} fixture rationale.`;
+    const { data, error } = await admin.rpc("review_clinical_asset", {
+      p_asset_id: fixture,
+      p_decision: decision,
+      p_reason: reason,
+    });
+    assert.equal(error, null, `Admin ${decision} failed: ${error?.message}`);
+    assert.equal(data.decision, decision);
+
+    const expectedStatus = decision === "approve" ? "approved" : decision === "reject" ? "rejected" : "quarantined";
+    const { data: asset, error: assetError } = await admin.from("clinical_assets")
+      .select("status,reviewed_at,validation_notes").eq("id", fixture).single();
+    assert.equal(assetError, null);
+    assert.equal(asset.status, expectedStatus);
+    assert.ok(asset.reviewed_at);
+    assert.equal(asset.validation_notes, reason);
+
+    const { data: audit, error: auditError } = await admin.from("clinical_asset_reviews")
+      .select("asset_id,reviewer_id,decision,reason,previous_status,new_status")
+      .eq("asset_id", fixture).single();
+    assert.equal(auditError, null);
+    assert.equal(audit.reviewer_id, adminUser.user.id);
+    assert.equal(audit.previous_status, "pending_review");
+    assert.equal(audit.new_status, expectedStatus);
+    assert.equal(audit.reason, reason);
+  }
+
+  const { data: ownerAudit, error: ownerAuditError } = await owner.from("clinical_asset_reviews")
+    .select("id").eq("asset_id", env.JINOX_TEST_ASSET_REVIEW_APPROVE_ID);
+  assert.equal(ownerAuditError, null);
+  assert.equal(ownerAudit?.length ?? 0, 0, "Non-admin uploader must not read global asset review history");
+
+  const { error: forgedAuditInsert } = await admin.from("clinical_asset_reviews").insert({
+    asset_id: env.JINOX_TEST_ASSET_REVIEW_APPROVE_ID,
+    reviewer_id: adminUser.user.id,
+    decision: "approve",
+    reason: "Forged audit record.",
+    previous_status: "pending_review",
+    new_status: "approved",
+    transaction_id: 1,
+  });
+  assert.ok(forgedAuditInsert, "Authenticated admins must not insert audit rows directly");
+
+  const { error: auditTamper } = await admin.from("clinical_asset_reviews")
+    .update({ reason: "Tampered audit record." })
+    .eq("asset_id", env.JINOX_TEST_ASSET_REVIEW_APPROVE_ID);
+  assert.ok(auditTamper, "Review history must not be mutable by authenticated admins");
+});
+
+test("concurrent review attempts produce exactly one decision and one audit row", {
+  skip: !reviewEnabled ? `Set staging-only variables: ${missingReview.join(", ")}` : false,
+}, async () => {
+  const admin = clientFor(env.JINOX_TEST_ASSET_REVIEW_ADMIN_TOKEN);
+  const assetId = env.JINOX_TEST_ASSET_REVIEW_CONCURRENT_ID;
+  const results = await Promise.all([
+    admin.rpc("review_clinical_asset", {
+      p_asset_id: assetId,
+      p_decision: "approve",
+      p_reason: "Concurrent staging test A.",
+    }),
+    admin.rpc("review_clinical_asset", {
+      p_asset_id: assetId,
+      p_decision: "quarantine",
+      p_reason: "Concurrent staging test B.",
+    }),
+  ]);
+  assert.equal(results.filter((result) => !result.error).length, 1);
+  assert.equal(results.filter((result) => result.error).length, 1);
+
+  const { data: audit, error } = await admin.from("clinical_asset_reviews")
+    .select("id,decision,new_status").eq("asset_id", assetId);
+  assert.equal(error, null);
+  assert.equal(audit?.length, 1, "Only one final review record should exist for the asset");
+  const { data: asset, error: assetError } = await admin.from("clinical_assets")
+    .select("status").eq("id", assetId).single();
+  assert.equal(assetError, null);
+  assert.equal(asset.status, audit[0].new_status);
+});
