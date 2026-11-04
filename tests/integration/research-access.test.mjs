@@ -301,3 +301,92 @@ test("concurrent review attempts produce exactly one decision and one audit row"
   assert.equal(assetError, null);
   assert.equal(asset.status, audit[0].new_status);
 });
+
+
+const curationVars = [
+  "JINOX_TEST_CURATION_DATASET_ID",
+  "JINOX_TEST_CURATION_ELIGIBLE_ITEM_ID",
+  "JINOX_TEST_CURATION_INELIGIBLE_ITEM_ID",
+  "JINOX_TEST_CURATION_OWNER_TOKEN",
+  "JINOX_TEST_CURATION_REVIEWER_TOKEN",
+  "JINOX_TEST_CURATION_RESEARCHER_TOKEN",
+  "JINOX_TEST_CURATION_UNRELATED_TOKEN",
+];
+const missingCuration = curationVars.filter((key) => !env[key]);
+const curationEnabled = missingCuration.length === 0;
+
+test("curation is role-gated, eligibility-checked and append-only; release manifests are immutable", {
+  skip: !curationEnabled ? `Set staging-only variables: ${missingCuration.join(", ")}` : false,
+}, async () => {
+  const owner = clientFor(env.JINOX_TEST_CURATION_OWNER_TOKEN);
+  const reviewer = clientFor(env.JINOX_TEST_CURATION_REVIEWER_TOKEN);
+  const researcher = clientFor(env.JINOX_TEST_CURATION_RESEARCHER_TOKEN);
+  const unrelated = clientFor(env.JINOX_TEST_CURATION_UNRELATED_TOKEN);
+  const eligibleItemId = env.JINOX_TEST_CURATION_ELIGIBLE_ITEM_ID;
+  const ineligibleItemId = env.JINOX_TEST_CURATION_INELIGIBLE_ITEM_ID;
+
+  const { data: curation, error: curateError } = await reviewer.rpc("curate_dataset_item", {
+    p_dataset_item_id: eligibleItemId,
+    p_decision: "include",
+    p_rationale: "Staging eligibility fixture.",
+  });
+  assert.equal(curateError, null, `Authorized reviewer could not curate eligible item: ${curateError?.message}`);
+  assert.equal(curation.decision, "include");
+
+  const { error: researcherAttempt } = await researcher.rpc("curate_dataset_item", {
+    p_dataset_item_id: eligibleItemId,
+    p_decision: "exclude",
+    p_rationale: "Researcher must not curate.",
+  });
+  assert.ok(researcherAttempt, "Researchers must not make curation decisions");
+
+  const { error: unrelatedAttempt } = await unrelated.rpc("curate_dataset_item", {
+    p_dataset_item_id: eligibleItemId,
+    p_decision: "exclude",
+    p_rationale: "Unrelated user must not curate.",
+  });
+  assert.ok(unrelatedAttempt, "Unrelated users must not curate project items");
+
+  const { error: ineligibleAttempt } = await reviewer.rpc("curate_dataset_item", {
+    p_dataset_item_id: ineligibleItemId,
+    p_decision: "include",
+    p_rationale: "Ineligible staging fixture.",
+  });
+  assert.ok(ineligibleAttempt, "Items without accepted QA, approved assets, consent and checksums must not be included");
+
+  const { error: releaseReviewerAttempt } = await reviewer.rpc("create_dataset_release", {
+    p_dataset_id: env.JINOX_TEST_CURATION_DATASET_ID,
+  });
+  assert.ok(releaseReviewerAttempt, "Only project managers may create releases");
+
+  const { data: release, error: releaseError } = await owner.rpc("create_dataset_release", {
+    p_dataset_id: env.JINOX_TEST_CURATION_DATASET_ID,
+  });
+  assert.equal(releaseError, null, `Project manager could not create eligible release: ${releaseError?.message}`);
+  assert.ok(release.manifest_sha256);
+  assert.ok(release.record_count > 0);
+
+  const { data: manifestRow, error: manifestError } = await owner.from("dataset_releases")
+    .select("id,record_count,manifest,manifest_sha256")
+    .eq("id", release.id).single();
+  assert.equal(manifestError, null);
+  assert.equal(manifestRow.record_count, manifestRow.manifest.records.length);
+  assert.ok(manifestRow.manifest.records.some((record) => record.dataset_item_id === eligibleItemId));
+  assert.equal(manifestRow.manifest_sha256, release.manifest_sha256);
+
+  const { error: releaseUpdate } = await owner.from("dataset_releases")
+    .update({ record_count: 999 }).eq("id", release.id);
+  assert.ok(releaseUpdate, "Release manifests must not be mutable");
+
+  const { error: releaseDelete } = await owner.from("dataset_releases")
+    .delete().eq("id", release.id);
+  assert.ok(releaseDelete, "Release manifests must not be deletable by authenticated clients");
+
+  const { error: curationUpdate } = await owner.from("dataset_item_curation_events")
+    .update({ rationale: "Tampered." }).eq("id", curation.id);
+  assert.ok(curationUpdate, "Curation history must not be mutable");
+
+  const { error: curationDelete } = await owner.from("dataset_item_curation_events")
+    .delete().eq("id", curation.id);
+  assert.ok(curationDelete, "Curation history must not be deletable by authenticated clients");
+});
