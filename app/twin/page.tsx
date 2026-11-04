@@ -23,7 +23,7 @@ export default function DigitalTwinPage() {
   const refreshCases = useCallback(async () => {
     if (!supabase) { setError("Supabase is not configured."); setLoading(false); return; }
     const { data, error: queryError } = await supabase.from("clinical_cases").select("id,case_code,county,age_band,created_at,consent_status").order("created_at", { ascending: false });
-    if (queryError) setError(queryError.message);
+    if (queryError) setError("Case records could not be loaded. Refresh or check your project access.");
     const list = (data ?? []) as CaseRecord[];
     setCases(list);
     setCaseId((current) => current && list.some((c) => c.id === current) ? current : list[0]?.id ?? "");
@@ -36,8 +36,8 @@ export default function DigitalTwinPage() {
       supabase.from("clinical_assets").select("id,modality,status,uploaded_at,byte_size").eq("case_id", id).order("uploaded_at", { ascending: false }),
       supabase.from("clinical_observations").select("id,category,observation_code,finding,observed_on,status").eq("case_id", id).order("observed_on", { ascending: false }),
     ]);
-    if (assetResult.error) setError(assetResult.error.message); else setAssets((assetResult.data ?? []) as Asset[]);
-    if (observationResult.error) setError(observationResult.error.message); else setObservations((observationResult.data ?? []) as Observation[]);
+    if (assetResult.error) setError("Source asset metadata could not be loaded."); else setAssets((assetResult.data ?? []) as Asset[]);
+    if (observationResult.error) setError("Clinical observations could not be loaded."); else setObservations((observationResult.data ?? []) as Observation[]);
   }, [supabase]);
 
   useEffect(() => { let active = true; async function load() {
