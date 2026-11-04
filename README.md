@@ -1,47 +1,65 @@
 # JinoX AI
 
-**JinoX AI is an early-stage research data operations platform for oral and craniofacial health research, beginning in East Africa.** The current product focuses on project and dataset metadata, multimodal research-data intake, case-linked records, environmental measurements, annotation preparation, and access-controlled research workflows.
+**JinoX AI is an AI data operations platform and managed data services business, focused initially on oral and craniofacial health.** Its operating model is inspired by data-centric AI companies such as Scale AI: help customers and research teams collect, curate, annotate, quality-check, package, and ultimately use high-quality datasets to develop and evaluate AI models.
 
-JinoX is a prototype for research operations. It is **not** a validated clinical decision-support system, diagnostic model, treatment recommender, genomic risk predictor, or biological digital-twin simulator.
+JinoX's differentiation is its oral-health domain focus, East African research context, specialist human-in-the-loop workflows, and responsible handling of sensitive health data. This is a strategic analogy, not an affiliation or claim of feature parity with Scale AI.
 
-## Current product scope
+The repository is an evolving prototype. It does not yet implement the complete target operating model, and it is not a validated clinical decision-support system.
 
-| Area | Current implementation | Important limitation |
+## Product north star
+
+**Turn raw, fragmented domain data into reliable, traceable, model-ready datasets.**
+
+The primary operating lifecycle is:
+
+**Collect → Curate → Annotate → Review / QA → Package and deliver → Prepare, train, and evaluate models**
+
+The core product is the data operations workflow. Clinical tools, environmental research, genetics, case records, and future simulation capabilities are supporting or gated extensions—not the primary business.
+
+## Core product modules
+
+| Module | Purpose | Current implementation boundary |
 | --- | --- | --- |
-| Projects | Create and manage research project metadata and project membership | Institutional governance and approval evidence still require operational verification |
-| Data intake | Register pseudonymous cases, upload supported assets to private storage, and import supported structured records | Browser-side checks are not a substitute for server-side file inspection, malware scanning, or de-identification |
-| Datasets | Register datasets and associate eligible source assets with dataset items | Immutable dataset releases, manifests, and controlled exports are not complete |
-| Annotation | Create and submit research annotations for dataset items | A complete independent reviewer, disagreement, and adjudication experience remains outstanding |
-| Environmental data | Capture source-attributed water and climate measurements | Records are research inputs, not validated population-risk estimates |
-| Clinical assessments | Record clinician-entered assessment information | No AI inference or autonomous diagnosis is connected |
-| Genetics | Record research-protocol metadata | Raw genomic ingestion and individual genetic-risk prediction are disabled |
-| Case records | View case-linked assets and dated observations | This is not a 3D reconstruction or biological simulation |
-| Training preparation | View dataset/annotation preparation status | No model-training runner, model registry, or validated model-serving pipeline is connected |
-| Administration | Manage user access levels through protected administration workflows | A role label does not verify professional credentials |
+| Organizations and projects | Customer/project setup, team, scope, governance | Project metadata and membership foundations exist; full customer onboarding and commercial operations are incomplete |
+| Data collection | Secure upload/import, structured capture, provenance, collection progress | Case, asset, and structured intake foundations exist; production-grade collection operations and file inspection remain incomplete |
+| Dataset management | Inventory, curation, lifecycle, versioning, delivery | Dataset metadata and item structures exist; immutable releases and controlled delivery remain incomplete |
+| Annotation operations | Task design, assignment, guidelines, annotation workspaces | Annotation records/revisions and some access foundations exist; full workforce-scale task orchestration is incomplete |
+| Quality assurance | Independent review, sampling, adjudication, agreement | Some review/access foundations exist; end-to-end QA and adjudication are incomplete |
+| Dataset delivery | Manifests, quality reports, export and access control | Governance principles exist; reproducible controlled delivery remains to be implemented |
+| Model development | Dataset splits, training, experiment tracking, evaluation | Current training page is preparation-only; no training execution engine, model registry, or validated serving pipeline is connected |
+| Workforce operations | Annotator qualification, workload, performance and compensation | Not implemented as a complete workforce-management system |
+| Administration and governance | Identity, permissions, audit, privacy, retention | Partial application and database foundations exist; production readiness requires verification |
 
-The standalone Research workspace has been retired from primary navigation. Research metadata APIs remain in the codebase; consult the route handlers and migration history before relying on any endpoint.
+The target workflow is detailed in [the product operating model](docs/product/operating-model.md). Always distinguish shipped functionality from planned operations.
 
-## Product workflow
+## Primary users
 
-1. Create a research project and define its purpose.
-2. Register dataset metadata and document source, modality, inclusion criteria, and intended use.
-3. Collect authorized data using pseudonymous case references and preserve source provenance.
-4. Curate assets and resolve data-quality issues.
-5. Prepare and submit annotations against a documented schema.
-6. Complete independent review and adjudication before treating labels as release-ready.
-7. Publish a controlled, versioned dataset only after governance, quality, and access gates have been implemented and verified.
+- Customers, institutions, and project owners who commission or manage data projects.
+- Project managers and data curators who collect and prepare source data.
+- Annotators and qualified domain experts who label assigned work.
+- Independent reviewers and quality leads who assess and adjudicate labels.
+- ML engineers and researchers who prepare datasets, train models, and evaluate results.
+- Data stewards and administrators responsible for governance and access.
 
-Steps 6–7 describe the target workflow; they are not a claim that all reviewer, adjudication, release, or export capabilities are already available.
+## Current product workflow
+
+The repository currently provides foundations for project metadata, pseudonymous case and asset intake, dataset metadata/items, annotation records/revisions, case-linked records, and training preparation. The intended end-to-end workflow adds secure collection channels, curation queues, annotation task orchestration, independent QA, versioned dataset delivery, and reproducible model development.
+
+The target workflow must not be mistaken for complete implementation. In particular:
+- File inspection, malware scanning, and robust de-identification need further work before real sensitive files are accepted.
+- Reviewer assignment, disagreement handling, adjudication, and quality analytics are incomplete.
+- Governed dataset manifests and controlled exports are incomplete.
+- Model training execution, experiment orchestration, evaluation pipelines, and model registry are not connected.
 
 ## Technology
 
-- **Application:** Next.js App Router, React, and TypeScript
+- **Application:** Next.js App Router, React, TypeScript
 - **UI:** Tailwind CSS
 - **Identity and data:** Supabase Auth and PostgreSQL with Row Level Security (RLS)
 - **File storage:** private Supabase Storage with short-lived signed URLs
 - **Hosting:** Vercel
 - **CI:** GitHub Actions
-- **Architecture:** modular monolith; do not introduce distributed services without measured operational need
+- **Architecture:** modular monolith; add infrastructure only when justified by measured product requirements
 
 ## Repository map
 
@@ -52,6 +70,7 @@ lib/                  Supabase clients, validation, and shared application logic
 supabase/migrations/  Ordered database and RLS migrations
 tests/unit/           Unit tests for validation and shared rules
 tests/integration/    Staging-oriented authorization tests
+docs/product/         Product strategy and operating model
 docs/                 Architecture, governance, implementation, and testing guides
 design.md             Product and interaction design specification
 planning.md           Milestones, sequencing, and acceptance gates
@@ -64,11 +83,12 @@ Start with the [documentation index](docs/README.md).
 
 | Document | Purpose |
 | --- | --- |
+| [Product operating model](docs/product/operating-model.md) | Data operations business model, workflow, roles, and target modules |
+| [Design specification](design.md) | User experience aligned to collection, annotation, QA, delivery, and model workflows |
 | [Architecture](docs/architecture/README.md) | Current architecture, boundaries, security invariants, and target structure |
-| [Data governance](docs/architecture/data-governance.md) | Dataset lifecycle, privacy, and release requirements |
+| [Data governance](docs/architecture/data-governance.md) | Data lifecycle, privacy, and release requirements |
 | [Multimodal intake](docs/architecture/multimodal-intake.md) | Implemented intake behavior and known limitations |
 | [Annotation access model](docs/architecture/annotation-assignment-access.md) | Roles, assignment boundaries, and staging verification |
-| [Profiles and administration](docs/architecture/profiles-roles-admin.md) | Account roles and admin controls |
 | [Testing guide](docs/testing/research-authorization.md) | Staging authorization test setup and limitations |
 | [Planning](planning.md) | Milestones and delivery strategy |
 | [Tasks](tasks.md) | Prioritized pending work |
@@ -85,7 +105,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Configure the Supabase project URL and public anon/publishable key required by the application. The checked-in `.env.example` should be treated as a template to verify against the current client configuration; see [pending tasks](tasks.md). Never expose a Supabase service-role key in browser code or a `NEXT_PUBLIC_*` variable.
+Configure the Supabase project URL and public anon/publishable key required by the application. See [.env.example](.env.example). Never expose a Supabase service-role key in browser code or a `NEXT_PUBLIC_*` variable.
 
 ## Quality checks
 
@@ -101,9 +121,7 @@ npm run build
 
 Integration tests require dedicated staging credentials and synthetic data. If required variables are absent, a skipped integration suite is **not** evidence that authorization policies are correct. See the [authorization test guide](docs/testing/research-authorization.md).
 
-CI currently installs dependencies with `npm install`. A reproducible `npm ci` workflow is a pending maintenance item and should be introduced only after the committed lockfile is verified against `package.json`.
-
-## Security and research-data governance
+## Security and data governance
 
 - Treat oral-health records, images, scans, genomic information, and linked metadata as sensitive health data.
 - Use only data with an appropriate legal basis, ethics determination, consent or documented waiver, and permitted-use scope.
@@ -111,14 +129,13 @@ CI currently installs dependencies with `npm install`. A reproducible `npm ci` w
 - Use pseudonymous identifiers and minimize data in URLs, logs, analytics, screenshots, and test fixtures.
 - Pseudonymized data is not automatically anonymous.
 - Keep secrets server-side; never commit credentials or tokens.
-- Record provenance and preserve annotation revisions and review decisions.
-- Do not release datasets until rights, governance, quality, limitations, and access terms have been reviewed.
+- Preserve source provenance, curator changes, annotation revisions, review decisions, and dataset versions.
+- Separate contributor identity and compensation records from patient-derived records and annotation judgments.
+- Do not release datasets or use them for model training until rights, governance, quality, split methodology, and access terms have been reviewed.
 - Do not use the prototype for autonomous diagnosis, triage, treatment recommendations, or clinical decisions.
-
-Production use requires a verified deployment configuration, applied and tested migrations, security review, backup/restore procedures, incident response, privacy and ethics governance, and appropriate regulatory assessment.
 
 ## Project status
 
-The repository is an evolving prototype. The near-term engineering focus is security hardening, reliable intake, project-scoped authorization, complete annotation review, data-quality controls, and reproducible dataset releases. Foundation models, digital twins, genomic prediction, and clinical deployment remain future research directions gated by scientific validation, ethics, safety, and regulatory review.
+The strategic direction is an end-to-end AI data operations platform. Near-term engineering priorities are security and reliable collection, dataset curation, annotation assignment, independent QA, and governed dataset delivery. Model-training orchestration and evaluation follow once high-quality, traceable datasets and reproducible workflows exist. Clinical AI, genomics, and biological simulation remain separate research directions gated by evidence and governance.
 
 See [planning.md](planning.md) for milestones and [tasks.md](tasks.md) for the active backlog.
