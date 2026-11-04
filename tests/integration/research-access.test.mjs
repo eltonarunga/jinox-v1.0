@@ -179,6 +179,7 @@ const reviewVars = [
   "JINOX_TEST_ASSET_REVIEW_ADMIN_TOKEN",
   "JINOX_TEST_ASSET_REVIEW_NON_ADMIN_TOKEN",
   "JINOX_TEST_ASSET_REVIEW_OWNER_TOKEN",
+  "JINOX_TEST_ASSET_REVIEW_ADMIN_SELF_OWNED_ID",
   "JINOX_TEST_ASSET_REVIEW_APPROVE_ID",
   "JINOX_TEST_ASSET_REVIEW_REJECT_ID",
   "JINOX_TEST_ASSET_REVIEW_QUARANTINE_ID",
@@ -198,12 +199,12 @@ test("only a non-owner global admin can make audited asset review decisions", {
   assert.equal(adminAuthError, null);
   assert.ok(adminUser.user?.id);
 
-  const { error: ownerAttempt } = await owner.rpc("review_clinical_asset", {
-    p_asset_id: env.JINOX_TEST_ASSET_REVIEW_APPROVE_ID,
+  const { error: adminSelfReview } = await admin.rpc("review_clinical_asset", {
+    p_asset_id: env.JINOX_TEST_ASSET_REVIEW_ADMIN_SELF_OWNED_ID,
     p_decision: "approve",
-    p_reason: "Owner self-review must fail.",
+    p_reason: "Administrator self-review must fail.",
   });
-  assert.ok(ownerAttempt, "Uploader must not approve an asset");
+  assert.ok(adminSelfReview, "An administrator must not review their own uploaded asset");
 
   const { error: nonAdminAttempt } = await nonAdmin.rpc("review_clinical_asset", {
     p_asset_id: env.JINOX_TEST_ASSET_REVIEW_APPROVE_ID,
@@ -253,6 +254,22 @@ test("only a non-owner global admin can make audited asset review decisions", {
     .select("id").eq("asset_id", env.JINOX_TEST_ASSET_REVIEW_APPROVE_ID);
   assert.equal(ownerAuditError, null);
   assert.equal(ownerAudit?.length ?? 0, 0, "Non-admin uploader must not read global asset review history");
+
+  const { error: forgedAuditInsert } = await admin.from("clinical_asset_reviews").insert({
+    asset_id: env.JINOX_TEST_ASSET_REVIEW_APPROVE_ID,
+    reviewer_id: adminUser.user.id,
+    decision: "approve",
+    reason: "Forged audit record.",
+    previous_status: "pending_review",
+    new_status: "approved",
+    transaction_id: 1,
+  });
+  assert.ok(forgedAuditInsert, "Authenticated admins must not insert audit rows directly");
+
+  const { error: auditTamper } = await admin.from("clinical_asset_reviews")
+    .update({ reason: "Tampered audit record." })
+    .eq("asset_id", env.JINOX_TEST_ASSET_REVIEW_APPROVE_ID);
+  assert.ok(auditTamper, "Review history must not be mutable by authenticated admins");
 });
 
 test("concurrent review attempts produce exactly one decision and one audit row", {
