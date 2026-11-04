@@ -35,13 +35,13 @@ export default function DiagnosticsWorkspacePage() {
       supabase.from("clinical_cases").select("id,case_code,county").order("created_at", { ascending: false }),
       supabase.from("clinical_assessments").select("id,case_id,assessment_type,clinician_impression,differential_notes,urgency,status,assessed_on").order("assessed_on", { ascending: false }),
     ]);
-    if (caseResult.error) setError(caseResult.error.message);
+    if (caseResult.error) setError("Case records could not be loaded. Refresh or check your project access.");
     else {
       const list = (caseResult.data ?? []) as CaseRecord[];
       setCases(list);
       if (!caseId && list[0]) setCaseId(list[0].id);
     }
-    if (assessmentResult.error) setError(assessmentResult.error.message);
+    if (assessmentResult.error) setError("Assessment history could not be loaded.");
     else setAssessments((assessmentResult.data ?? []) as Assessment[]);
   }, [supabase, caseId]);
 
@@ -78,7 +78,7 @@ export default function DiagnosticsWorkspacePage() {
       assessed_on: new Date().toISOString().slice(0,10),
     });
     setBusy(false);
-    if (insertError) { setError(insertError.message); return; }
+    if (insertError) { setError("The assessment could not be saved. Check the selected case and your access, then try again."); return; }
     setImpression(""); setDifferential(""); setAttested(false); setFinalize(false);
     await refresh();
     setNotice(finalize ? "Clinician-entered assessment finalized and saved." : "Draft assessment saved. It is separate from any AI output.");
