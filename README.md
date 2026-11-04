@@ -2,7 +2,7 @@
 
 **JinoX AI is an AI data operations platform and managed data services business, focused initially on oral and craniofacial health.** Its operating model is inspired by data-centric AI companies: help customers and research teams collect, curate, annotate, quality-check, package, and ultimately use high-quality datasets to develop and evaluate AI models.
 
-JinoX's differentiation is its oral-health domain focus, East African research context, specialist human-in-the-loop workflows, and responsible handling of sensitive health data. This is a strategic analogy, not an affiliation or claim of feature parity with Scale AI.
+JinoX's differentiation is its oral-health domain focus, East African research context, specialist human-in-the-loop workflows, and responsible handling of sensitive health data.
 
 The repository is an evolving prototype. It does not yet implement the complete target operating model, and it is not a validated clinical decision-support system.
 
