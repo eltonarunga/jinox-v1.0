@@ -32,10 +32,10 @@ type ObservationRecord = {
   status: string;
 };
 
-const field = "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-slate-500 focus:ring-4 focus:ring-slate-900/5";
-const button = "inline-flex min-h-10 items-center justify-center rounded-xl bg-black px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50";
-const secondary = "inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50";
-const panel = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
+const field = "mt-1.5 w-full rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-800 outline-none focus:border-slate-500 focus:ring-4 focus:ring-slate-900/5";
+const button = "inline-flex min-h-10 items-center justify-center rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50";
+const secondary = "inline-flex min-h-10 items-center justify-center rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-neutral-700 transition hover:bg-neutral-50 disabled:opacity-50";
+const panel = "rounded-lg border border-neutral-200 bg-white p-5 shadow-sm";
 
 const categories = ["dental_caries", "periodontal", "oral_mucosa", "fluorosis", "pain", "occlusion", "other"] as const;
 const counties = [
@@ -295,26 +295,26 @@ export default function DataIntakePage() {
   return (
     <main className="min-h-screen bg-white text-neutral-950">
 
-      <div className="mx-auto max-w-6xl px-4 py-7 sm:px-8 sm:py-10">
-        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
+      <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-8 sm:py-10">
+        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 pb-5">
           <div>
             
             <h1 className="mt-3 text-3xl font-semibold tracking-tight">Multimodal data intake</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Create a pseudonymous case, upload source files to private storage, and record structured clinical observations.</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">Create a pseudonymous case, upload source files to private storage, and record structured clinical observations.</p>
           </div>
           <Link href="/datasets" className={secondary}>Dataset workspace</Link>
         </header>
 
-        <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+        <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
           <strong>Data governance rule.</strong> Upload only data you are authorized to use. Exclude names, national IDs, contact details and identifiers embedded in images or filenames. Files remain private and pending review. This workflow does not perform diagnosis, server-side content sniffing, malware scanning, image/DICOM pixel de-identification or model inference. CSV/JSON checks run in the browser and are not a security boundary.
         </div>
-        {error && <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
-        {notice && <div role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</div>}
+        {error && <div role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
+        {notice && <div role="status" className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</div>}
 
         <div className="mt-6 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
           <section className={panel}>
             <h2 className="text-lg font-semibold">1. Create a case</h2>
-            <p className="mt-1 text-sm text-slate-500">Use a study code, not a patient name or hospital number.</p>
+            <p className="mt-1 text-sm text-neutral-500">Use a study code, not a patient name or hospital number.</p>
             <form className="mt-4 space-y-4" onSubmit={createCase}>
               <label className="block text-sm font-medium">Pseudonymous case code
                 <input className={field} value={caseCode} onChange={(event) => setCaseCode(event.target.value)} required minLength={3} maxLength={64} pattern="[A-Za-z0-9][A-Za-z0-9_-]{2,63}" placeholder="e.g. KEN-ORAL-0001" autoComplete="off" />
@@ -339,7 +339,7 @@ export default function DataIntakePage() {
                   <option value="obtained">Informed consent obtained</option><option value="ethics_waiver">Approved ethics waiver</option>
                 </select>
               </label>
-              <label className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 text-sm leading-5 text-slate-700">
+              <label className="flex items-start gap-3 rounded-lg bg-neutral-50 p-3 text-sm leading-5 text-neutral-700">
                 <input type="checkbox" checked={consentConfirmed} onChange={(event) => setConsentConfirmed(event.target.checked)} className="mt-1 size-4 accent-black" />
                 <span>I confirm the required informed consent or approved ethics waiver is documented, the intended use is permitted, and direct identifiers have been excluded.</span>
               </label>
@@ -349,7 +349,7 @@ export default function DataIntakePage() {
 
           <section className={panel}>
             <h2 className="text-lg font-semibold">2. Upload source files</h2>
-            <p className="mt-1 text-sm text-slate-500">Each file is checked against modality-specific extension and size rules before upload.</p>
+            <p className="mt-1 text-sm text-neutral-500">Each file is checked against modality-specific extension and size rules before upload.</p>
             <div className="mt-4">
               <label className="block text-sm font-medium">Target case
                 <select className={field} value={selectedCaseId} onChange={(event) => setSelectedCaseId(event.target.value)} required>
@@ -363,35 +363,35 @@ export default function DataIntakePage() {
                   {Object.entries(uploadTypes).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
                 </select>
               </label>
-              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4">
+              <div className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-4">
                 <label className="block text-sm font-medium">Select files
                   <input className="mt-3 block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-black file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white" type="file" multiple accept={currentUploadType.accept} onChange={(event) => setFiles(Array.from(event.target.files ?? []))} />
                 </label>
-                <p className="mt-2 text-xs leading-5 text-slate-500">Accepted: {currentUploadType.accept.replaceAll(",", ", ")} · Maximum {Math.round(currentUploadType.maxBytes / (1024 * 1024))} MB per file.</p>
-                {files.length > 0 && <ul className="mt-3 space-y-1 text-xs text-slate-700">{files.map((file) => <li key={file.name + file.size} className="flex justify-between gap-3"><span className="break-all">{file.name}</span><span className="shrink-0">{humanSize(file.size)}</span></li>)}</ul>}
+                <p className="mt-2 text-xs leading-5 text-neutral-500">Accepted: {currentUploadType.accept.replaceAll(",", ", ")} · Maximum {Math.round(currentUploadType.maxBytes / (1024 * 1024))} MB per file.</p>
+                {files.length > 0 && <ul className="mt-3 space-y-1 text-xs text-neutral-700">{files.map((file) => <li key={file.name + file.size} className="flex justify-between gap-3"><span className="break-all">{file.name}</span><span className="shrink-0">{humanSize(file.size)}</span></li>)}</ul>}
               </div>
-              <label className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 text-sm leading-5 text-slate-700">
+              <label className="flex items-start gap-3 rounded-lg bg-neutral-50 p-3 text-sm leading-5 text-neutral-700">
                 <input type="checkbox" checked={uploadConsentConfirmed} onChange={(event) => setUploadConsentConfirmed(event.target.checked)} className="mt-1 size-4 accent-black" />
                 <span>I confirm these files are covered by the selected case’s documented consent or ethics waiver, and contain no direct identifiers in the file content or metadata.</span>
               </label>
               <button className={button} type="submit" disabled={busy || !selectedCaseId || !files.length}>{busy ? "Working…" : "Upload and register files"}</button>
-              {uploadProgress && <p role="status" className="text-sm text-slate-600">{uploadProgress}</p>}
+              {uploadProgress && <p role="status" className="text-sm text-neutral-600">{uploadProgress}</p>}
             </form>
-            <div className="mt-5 border-t border-slate-100 pt-4">
+            <div className="mt-5 border-t border-neutral-100 pt-4">
               <p className="text-sm font-semibold">Strict record templates</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <a className={secondary} href="/templates/clinical-record-template.csv" download>Clinical CSV template</a>
                 <a className={secondary} href="/templates/environmental-data-template.csv" download>Environmental CSV template</a>
               </div>
-              <p className="mt-2 text-xs text-slate-500">Clinical-record CSV/JSON rows are imported as unreviewed observations; environmental CSV/JSON rows become measurements. Browser-side checks are not a security boundary; database constraints and RLS are also applied.</p>
+              <p className="mt-2 text-xs text-neutral-500">Clinical-record CSV/JSON rows are imported as unreviewed observations; environmental CSV/JSON rows become measurements. Browser-side checks are not a security boundary; database constraints and RLS are also applied.</p>
             </div>
           </section>
         </div>
 
         <section className={`${panel} mt-5`}>
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><h2 className="text-lg font-semibold">3. Structured clinical observation</h2><p className="mt-1 text-sm text-slate-500">Record a clinician-entered finding using required fields and a controlled category.</p></div>
-            <span className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600">{selectedCase ? selectedCase.case_code : "No case selected"}</span>
+            <div><h2 className="text-lg font-semibold">3. Structured clinical observation</h2><p className="mt-1 text-sm text-neutral-500">Record a clinician-entered finding using required fields and a controlled category.</p></div>
+            <span className="rounded-full border border-neutral-200 px-3 py-1 text-xs font-medium text-neutral-600">{selectedCase ? selectedCase.case_code : "No case selected"}</span>
           </div>
           <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={addObservation}>
             <label className="block text-sm font-medium">Category
@@ -412,16 +412,16 @@ export default function DataIntakePage() {
 
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
           <section className={panel}>
-            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Registered files</h2><span className="text-sm text-slate-500">{assets.length}</span></div>
-            {assets.length ? <ul className="mt-4 divide-y divide-slate-100">{assets.map((asset) => <li key={asset.id} className="flex items-start justify-between gap-3 py-3"><div className="min-w-0"><p className="break-all text-sm font-medium">{asset.original_filename}</p><p className="mt-1 text-xs text-slate-500">{label(asset.modality)} · {humanSize(asset.byte_size)}</p></div><span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">{label(asset.status)}</span></li>)}</ul> : <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-500">No files registered for this case yet.</p>}
+            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Registered files</h2><span className="text-sm text-neutral-500">{assets.length}</span></div>
+            {assets.length ? <ul className="mt-4 divide-y divide-slate-100">{assets.map((asset) => <li key={asset.id} className="flex items-start justify-between gap-3 py-3"><div className="min-w-0"><p className="break-all text-sm font-medium">{asset.original_filename}</p><p className="mt-1 text-xs text-neutral-500">{label(asset.modality)} · {humanSize(asset.byte_size)}</p></div><span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">{label(asset.status)}</span></li>)}</ul> : <p className="mt-4 rounded-lg bg-neutral-50 p-4 text-sm text-neutral-500">No files registered for this case yet.</p>}
           </section>
           <section className={panel}>
-            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Clinical observations</h2><span className="text-sm text-slate-500">{observations.length}</span></div>
-            {observations.length ? <ul className="mt-4 divide-y divide-slate-100">{observations.map((observation) => <li key={observation.id} className="py-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold">{label(observation.category)} · {observation.observation_code}</p><span className="text-xs text-slate-500">{observation.observed_on}</span></div><p className="mt-1 whitespace-pre-wrap text-sm text-slate-700">{observation.finding}</p><p className="mt-1 text-xs text-slate-500">Status: {label(observation.status)} · clinician-entered</p></li>)}</ul> : <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-500">No structured observations recorded yet.</p>}
+            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Clinical observations</h2><span className="text-sm text-neutral-500">{observations.length}</span></div>
+            {observations.length ? <ul className="mt-4 divide-y divide-slate-100">{observations.map((observation) => <li key={observation.id} className="py-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold">{label(observation.category)} · {observation.observation_code}</p><span className="text-xs text-neutral-500">{observation.observed_on}</span></div><p className="mt-1 whitespace-pre-wrap text-sm text-neutral-700">{observation.finding}</p><p className="mt-1 text-xs text-neutral-500">Status: {label(observation.status)} · clinician-entered</p></li>)}</ul> : <p className="mt-4 rounded-lg bg-neutral-50 p-4 text-sm text-neutral-500">No structured observations recorded yet.</p>}
           </section>
         </div>
 
-        <footer className="mt-8 flex flex-wrap justify-between gap-3 border-t border-slate-200 pt-5 text-xs text-slate-500">
+        <footer className="mt-8 flex flex-wrap justify-between gap-3 border-t border-neutral-200 pt-5 text-xs text-neutral-500">
           <span>JinoX AI · Secure data intake prototype</span>
           <span>{cases.length} case(s) in this account</span>
         </footer>
