@@ -64,7 +64,7 @@ The standalone Research workspace has been removed from primary navigation; rese
 
 ### M0 — Product scope and prototype baseline
 
-<badge>Complete</badge>
+**Status: Complete**
 
 **Objective:** Establish a coherent, honest product boundary and a minimal workflow-oriented application.
 
@@ -80,7 +80,7 @@ The standalone Research workspace has been removed from primary navigation; rese
 
 ### M1 — Security, dependency, and operational baseline
 
-<badge color="warning">Next priority</badge>
+**Status: Next priority**
 
 **Objective:** Make the existing prototype safer to maintain, test, deploy, and operate.
 
