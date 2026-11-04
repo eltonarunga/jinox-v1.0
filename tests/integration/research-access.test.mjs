@@ -325,6 +325,29 @@ test("curation is role-gated, eligibility-checked and append-only; release manif
   const eligibleItemId = env.JINOX_TEST_CURATION_ELIGIBLE_ITEM_ID;
   const ineligibleItemId = env.JINOX_TEST_CURATION_INELIGIBLE_ITEM_ID;
 
+  // Project managers previously had a direct-insert RLS policy on annotation_reviews.
+  // Confirm that the migration removes this path and requires the atomic review RPC.
+  const { data: eligibleAnnotations, error: annotationLookupError } = await owner
+    .from("dataset_annotations")
+    .select("id,annotator_id")
+    .eq("dataset_item_id", eligibleItemId)
+    .eq("status", "submitted")
+    .limit(1);
+  assert.equal(annotationLookupError, null);
+  assert.equal(eligibleAnnotations?.length, 1, "Eligible item fixture must have one submitted annotation");
+  const { data: ownerAuth, error: ownerAuthError } = await owner.auth.getUser();
+  assert.equal(ownerAuthError, null);
+  assert.ok(ownerAuth.user?.id);
+  assert.notEqual(ownerAuth.user.id, eligibleAnnotations[0].annotator_id,
+    "The eligible annotation must belong to a different user for this direct-write test");
+  const { error: directReviewInsert } = await owner.from("annotation_reviews").insert({
+    annotation_id: eligibleAnnotations[0].id,
+    reviewer_id: ownerAuth.user.id,
+    decision: "accepted",
+    review_notes: "Staging negative test: direct manager insert must be denied.",
+  });
+  assert.ok(directReviewInsert, "Project managers must not manufacture QA decisions through direct table inserts");
+
   const { data: curation, error: curateError } = await reviewer.rpc("curate_dataset_item", {
     p_dataset_item_id: eligibleItemId,
     p_decision: "include",
