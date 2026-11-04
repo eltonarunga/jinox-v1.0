@@ -49,7 +49,7 @@ const workspaces = [
   { title: "Projects", eyebrow: "CUSTOMERS & SCOPE", description: "Set up project context, ownership and access.", href: "/projects", action: "Open projects", mark: "P" },
   { title: "Data collection", eyebrow: "SECURE INTAKE", description: "Create pseudonymous cases and register source data.", href: "/data", action: "Collect data", mark: "C" },
   { title: "Datasets", eyebrow: "CURATION & INVENTORY", description: "Manage dataset scope, source records and eligibility.", href: "/datasets", action: "View datasets", mark: "D" },
-  { title: "Annotation operations", eyebrow: "ASSIGNMENT & QA", description: "Manage task assignment, annotation and independent review.", href: "/annotate", action: "Open operations", mark: "A" },
+  { title: "Annotation operations", eyebrow: "ASSIGNMENT & LABELING", description: "Manage task assignment and submit expert annotations.", href: "/annotate", action: "Open operations", mark: "A" },\n  { title: "Quality assurance", eyebrow: "INDEPENDENT REVIEW", description: "Review submitted labels and record acceptance or corrections.", href: "/quality", action: "Open review queue", mark: "Q" },
 ];
 
 function Status({ value }: { value: string }) {
