@@ -43,6 +43,7 @@ using (
     from public.dataset_items i
     join public.research_datasets d on d.id = i.dataset_id
     where i.clinical_asset_id = clinical_assets.id
+      and clinical_assets.status = 'approved'
       and (
         public.research_can_manage_project(d.project_id)
         or public.research_current_user_has_project_role(d.project_id, array['reviewer']::text[])
@@ -66,6 +67,7 @@ using (
     join public.dataset_items i on i.clinical_asset_id = a.id
     join public.research_datasets d on d.id = i.dataset_id
     where a.storage_path = storage.objects.name
+      and a.status = 'approved'
       and (
         public.research_can_manage_project(d.project_id)
         or public.research_current_user_has_project_role(d.project_id, array['reviewer']::text[])
@@ -193,7 +195,7 @@ begin
   if v_actor is null then
     raise exception 'Authentication required' using errcode = '42501';
   end if;
-  if p_decision not in ('accepted', 'changes_requested', 'rejected') then
+  if p_decision is null or p_decision not in ('accepted', 'changes_requested', 'rejected') then
     raise exception 'Unsupported review decision' using errcode = '22023';
   end if;
   if char_length(coalesce(p_review_notes, '')) > 5000 then
