@@ -18,6 +18,7 @@ This directory contains the maintained product, operating-model, technical, gove
 | [Architecture](architecture/README.md) | Engineers and technical reviewers | Current implementation, target architecture, system boundaries, security invariants |
 | [Incremental refactor plan](architecture/refactor-plan.md) | Engineers | Safe refactoring sequence aligned to the data-operations lifecycle |
 | [Multimodal intake](architecture/multimodal-intake.md) | Engineers, data curators, security reviewers | Intake flow, supported records, storage model, limitations, migration checks |
+| [Privileged asset review](security/asset-review-workflow.md) | Administrators and engineers | Admin-only review queue, append-only audit, database enforcement, staging tests |
 | [Annotation assignment and access](architecture/annotation-assignment-access.md) | Engineers, project owners, reviewers | Project roles, assignment permissions, RLS behavior, staging verification |
 | [Profiles, roles, and administration](architecture/profiles-roles-admin.md) | Engineers and administrators | Account access levels, protected role management, migration/bootstrap notes |
 | [Data governance](architecture/data-governance.md) | Project owners, data stewards, ethics leads | Data lifecycle, privacy, training-use approval, and release requirements |
