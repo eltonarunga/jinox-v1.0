@@ -120,6 +120,8 @@ export default function AssetReviewPage() {
       setError("A reason is required for rejection or quarantine.");
       return;
     }
+    const actionLabel = decision === "approve" ? "approve" : decision === "reject" ? "reject" : "quarantine";
+    if (!window.confirm(`Confirm you want to ${actionLabel} this asset? This decision cannot be changed in the review queue.`)) return;
     setBusyId(asset.id);
     setError("");
     setNotice("");
@@ -211,6 +213,7 @@ export default function AssetReviewPage() {
                   </div>
 
                   <label className="mt-4 block text-sm font-medium">Review rationale
+                    <span className="mt-1 block text-xs font-normal text-slate-500">Record an operational reason only. Do not include patient names, identifiers or other sensitive clinical details.</span>
                     <textarea value={reasons[asset.id] ?? ""} onChange={(event) => setReasons((current) => ({ ...current, [asset.id]: event.target.value }))} maxLength={2000} rows={2} className="mt-2 w-full border border-slate-300 bg-white p-3 text-sm" placeholder="Required for rejection or quarantine; optional for approval." />
                   </label>
                   <div className="mt-3 flex flex-wrap gap-2">
