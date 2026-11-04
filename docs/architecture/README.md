@@ -1,103 +1,170 @@
 # JinoX AI platform architecture
 
-## Product boundary
+**Document status:** living architecture guide  
+**Product stage:** research-data operations prototype  
+**Last reviewed:** 2026-11-04
 
-JinoX is a research data operations platform for East African oral-health AI. Its primary job is to collect authorized data, curate it, coordinate expert annotation, validate quality, and deliver versioned datasets. It is not a clinical decision-support system and must not present experimental risk outputs as validated clinical advice.
+## 1. Product boundary
 
-## Recommended stack
+JinoX is a research data operations platform for East African oral-health research. Its current engineering purpose is to support project metadata, data intake, case-linked records, dataset preparation, annotation, and controlled access.
 
-- **Web and server runtime:** Next.js App Router + React + TypeScript, deployed on Vercel.
-- **Identity and relational data:** Supabase Auth + PostgreSQL with Row Level Security (RLS).
-- **Clinical assets:** private Supabase Storage buckets, short-lived signed URLs, checksum and provenance metadata.
-- **UI:** Tailwind CSS and accessible, reusable components; introduce a component library only where it reduces duplication.
-- **Validation:** shared TypeScript domain types and explicit server-side request validation. Add a schema library such as Zod when dependency and lockfile changes can be tested in CI.
-- **Quality:** ESLint, TypeScript strict mode, unit tests for domain rules, integration tests for RLS and API routes, and end-to-end tests for the critical annotation workflow.
-- **Delivery:** GitHub pull requests + CI + Vercel preview deployments; production schema changes only through reviewed migrations.
+It is not a validated clinical decision-support system. The repository does not currently implement a validated multimodal foundation model, autonomous diagnostic inference, individual genomic risk prediction, or a biological digital-twin simulator.
 
-Do not introduce microservices, a separate queue system, vector search, or a model-serving platform until measured workload requires them. A modular monolith is simpler to secure and operate at the current stage.
+The long-term research vision may include those capabilities. They must remain clearly separated from shipped functionality and require independent scientific validation, governance, safety review, and regulatory assessment.
 
-## Logical architecture
+## 2. Current implementation
+
+The following describes the codebase, not a guarantee that every deployment has the required migrations or environment configured.
+
+| Domain | Present in repository | Not yet complete / operationally verified |
+| --- | --- | --- |
+| Application shell | Next.js App Router pages and global navigation | Full browser-based regression coverage |
+| Identity | Supabase Auth integration and profile/access-level workflows | Production identity lifecycle and credential verification |
+| Research projects | Project metadata, membership, and related API/database structures | Full institutional governance and approval workflow |
+| Dataset registry | Dataset metadata and dataset-item structures | Immutable releases, manifest generation, and governed exports |
+| Intake | Case metadata, supported asset upload, private storage paths, structured record import | Server-side content inspection, malware scanning, and robust de-identification |
+| Annotation | Dataset-item queue and annotation revision records | Complete reviewer UI, disagreement resolution, adjudication, and quality reporting |
+| Environmental data | Source-attributed water/climate measurement capture | Validated environmental epidemiology and county risk inference |
+| Clinical assessments | Manual assessment documentation | Diagnostic inference or clinical decision support |
+| Genetics | Research protocol metadata | Raw genomic intake, analysis, and individual risk prediction |
+| Case records | Case-linked assets and longitudinal observations | 3D reconstruction or biological simulation |
+| Training preparation | Dataset/annotation readiness information | Training execution, experiment orchestration, model registry, and deployment |
+
+The standalone Research page was retired from primary navigation. Research API route groups remain present; their existence must not be interpreted as proof that a complete user-facing research workflow is available.
+
+## 3. Technology stack
+
+- **Web application:** Next.js App Router, React, TypeScript
+- **Presentation:** Tailwind CSS and reusable accessible components
+- **Authentication:** Supabase Auth
+- **Relational data:** Supabase PostgreSQL with Row Level Security
+- **Object storage:** private Supabase Storage buckets and short-lived signed URLs
+- **Hosting:** Vercel
+- **Source control and CI:** GitHub and GitHub Actions
+
+The current architecture is a modular monolith. Prefer clear domain boundaries within the existing application before considering microservices, separate queues, vector infrastructure, or dedicated model-serving systems.
+
+## 4. Logical architecture
 
 ```mermaid
 flowchart TD
-  U[Data partners / annotators / reviewers / customers] --> WEB[Next.js App Router]
+  U[Authorized users and research partners] --> WEB[Next.js application]
   WEB --> AUTH[Supabase Auth]
-  WEB --> API[Server routes and domain services]
-  API --> PG[(Postgres + RLS)]
+  WEB --> API[Route handlers and application logic]
+  API --> PG[(PostgreSQL with RLS)]
   API --> ST[(Private object storage)]
-  API --> AUD[Audit events and provenance]
-  API --> JOBS[Background jobs - later, when needed]
-  PG --> EXPORT[Controlled dataset export]
-  ST --> EXPORT
+  API --> AUD[Audit and provenance records]
+  PG --> PREP[Dataset preparation]
+  ST --> PREP
+  PREP --> REL[Controlled release - future capability]
+  PREP -.-> ML[Research model development - future capability]
 ```
 
-## Domain modules
+The dashed model path is a future research direction, not an implemented training or inference pipeline.
 
-1. **Identity and access:** user profile, organization membership, project membership, role and permissions.
-2. **Data intake:** source, collection authorization, pseudonymous case identifiers, asset metadata, checksums and storage paths.
-3. **Dataset registry:** dataset definitions, schema versions, inclusion criteria, lineage and release status.
-4. **Annotation operations:** work items, assignments, annotation revisions, reviewer decisions, adjudication and quality metrics.
-5. **Governance:** consent/legal-basis metadata, ethics approvals, permitted purposes, retention and withdrawal workflows.
-6. **Delivery:** immutable dataset releases, manifests, label dictionaries, quality reports, access agreements and export audit events.
-7. **Commercial operations:** customer projects, quotes, task rates, invoices and payment reconciliation; do not mix billing state into clinical labels.
+## 5. Domain boundaries
 
-## Required invariants
+1. **Identity and access:** authenticated identity, profile, project membership, access level, and permission checks.
+2. **Project management:** research purpose, project metadata, membership, and project-level scope.
+3. **Data intake:** pseudonymous case references, source metadata, file validation, asset registration, and provenance.
+4. **Dataset registry:** dataset definitions, modality, inclusion criteria, item linkage, and lifecycle status.
+5. **Annotation operations:** work items, assignment boundaries, annotation revisions, review, adjudication, and quality measures.
+6. **Governance:** ethics determination, consent or other lawful basis, permitted purpose, retention, withdrawal, and sharing constraints.
+7. **Delivery:** immutable releases, manifests, label dictionaries, quality reports, access grants, and export audit events.
+8. **Research extensions:** environmental analysis, genetics research metadata, model development, and simulation; these remain distinct from validated clinical functionality.
 
-- All patient-linked records and source assets remain private by default.
+## 6. Security invariants
+
+- Patient-linked records and source assets remain private by default.
+- UI visibility is not authorization. Verify identity, role, project membership, and object access on the server and in RLS.
 - Never authorize using user-editable profile metadata.
-- Enforce tenant/project membership in server code and PostgreSQL RLS; UI visibility is not authorization.
-- Keep the Supabase service-role key server-only. Never prefix it with `NEXT_PUBLIC_` or use it in browser modules.
-- Signed asset URLs are short-lived and issued only after authorization.
-- Every dataset item has provenance and a documented lawful basis before it can be released.
-- Annotation changes are versioned. Reviews and adjudication are separate from the annotator's own submission.
-- Dataset exports are reproducible, versioned, access-controlled, and accompanied by a manifest and limitations.
-- Do not call pseudonymized health data anonymous.
-- Do not use real patient data in tests, screenshots, fixtures or logs.
+- Keep service-role credentials server-only; never expose them through browser modules or `NEXT_PUBLIC_*` variables.
+- Issue short-lived signed URLs only after authorization. Treat them as bearer credentials.
+- Preserve provenance and annotation revisions.
+- Independent review must not be performed by the original annotator.
+- Dataset export must be permissioned, reproducible, versioned, and auditable before being enabled for real data.
+- Pseudonymized health data must not be described as anonymous without a defensible formal determination.
+- Do not place real patient data, tokens, signed URLs, or source files in tests, screenshots, analytics, or logs.
 
-## Target repository layout
+See [data governance](data-governance.md), [annotation assignment and access](annotation-assignment-access.md), and [research authorization testing](../testing/research-authorization.md).
+
+## 7. Repository structure
 
 ```text
-app/
-  (auth)/                 # sign-in and callback routes
-  (workspace)/            # authenticated product pages
-  api/                    # thin HTTP adapters only
-components/
-  ui/                     # shared accessible primitives
-  features/                # feature-specific presentation
-lib/
-  config/                  # validated environment configuration
-  supabase/                # browser/server clients
-  auth/                    # authorization helpers
-  domains/
-    datasets/
-    intake/
-    annotations/
-    governance/
-    delivery/
-  shared/                  # errors, ids, dates, logging
-supabase/
-  migrations/
-docs/
-  architecture/
-tests/
-  unit/
-  integration/
-  e2e/
+app/                  Next.js pages, layouts, and route handlers
+components/           Shared and feature UI
+lib/                  Supabase clients, validation, and shared application logic
+supabase/migrations/  Ordered schema, policy, and function migrations
+tests/unit/           Unit tests
+tests/integration/    Staging-oriented integration tests
+docs/                 Architecture, governance, and testing documentation
+planning.md           Milestones and delivery strategy
+tasks.md              Prioritized implementation backlog
 ```
 
-Migrate toward this layout incrementally. Keep route handlers thin: parse and validate input, establish identity and permissions, call a domain function, map domain errors to HTTP responses, and emit an audit event.
+The repository may not yet match every idealized domain boundary. Refactor incrementally; do not perform broad structural moves without tests and a migration plan.
 
-## Recommended delivery sequence
+## 8. Engineering standards
 
-1. Make environment and auth handling fail safely.
-2. Establish a reliable type-check/lint/build CI gate.
-3. Extract shared domain types and validation from route handlers.
-4. Implement organization/project membership and role-based authorization consistently.
-5. Complete annotation assignments, independent reviews, adjudication and immutable dataset releases.
-6. Add tests for cross-project access denial, storage authorization, and consent/withdrawal rules.
-7. Add AI pre-labeling only after a human-reviewed baseline and measurable quality criteria exist.
-8. Add exports and customer APIs with per-release access grants and audit logs.
+### Application boundaries
 
-## Out of scope until justified
+- Keep route handlers thin: parse input, authenticate, authorize, validate, call domain logic, and map errors to stable HTTP responses.
+- Centralize validation and domain rules rather than duplicating them across pages and APIs.
+- Keep browser and server Supabase clients separate.
+- Use explicit TypeScript types for persisted domain records and API payloads.
+- Do not trust client-provided user IDs, ownership fields, role names, file paths, or status transitions.
 
-Avoid premature microservices, Kubernetes, a separate data warehouse, autonomous clinical recommendations, and automated labeling without review. Use managed Postgres and object storage first; revisit architecture when actual volume, latency, or isolation requirements demonstrate a need.
+### Database changes
+
+- Every schema change must be a timestamped migration committed to source control.
+- Review RLS policies, grants, triggers, and security-definer functions as part of the migration.
+- Apply migrations first to a dedicated staging project and verify expected behavior.
+- Never treat a migration file in GitHub as proof that the remote Supabase project has applied it.
+- Include rollback or forward-recovery notes for changes that affect persisted data.
+
+### Errors and observability
+
+- Return safe, actionable errors to users; do not expose SQL, stack traces, tokens, signed URLs, or sensitive record existence.
+- Keep logs structured and minimized.
+- Record security-relevant events without embedding patient content.
+- Define monitoring, alert ownership, incident triage, and retention before production use.
+
+### Testing
+
+- Unit-test validation and domain rules.
+- Integration-test authentication, RLS, project isolation, storage access, and permission boundaries with separate synthetic users.
+- Add end-to-end coverage for critical workflows: sign-in, intake, dataset creation, annotation, review, and export.
+- Test loading, empty, error, permission-denied, expired-session, and network-failure states.
+- A skipped integration suite is not a passing authorization assessment.
+
+### Dependency and release management
+
+- Keep `package.json` and `package-lock.json` synchronized.
+- Prefer reproducible clean installs in CI after lockfile consistency has been established.
+- Review security advisories and breaking changes before dependency upgrades.
+- Require CI and preview deployment checks before merging.
+- Record migration and deployment requirements in each release PR.
+
+## 9. Delivery sequence
+
+See [planning.md](../../planning.md) for milestone definitions and [tasks.md](../../tasks.md) for the current actionable backlog. The intended order is:
+
+1. Security, dependency, and deployment baseline.
+2. Reliable data intake and project-scoped access.
+3. Complete annotation assignment, independent review, and adjudication.
+4. Dataset quality, provenance, versioning, and controlled release.
+5. Research interoperability and reproducible model-preparation workflows.
+6. Future scientific AI capabilities, only after appropriate evidence and governance.
+
+## 10. Architecture decision rules
+
+- Prefer the smallest implementation that satisfies a documented user and security requirement.
+- Do not introduce infrastructure for speculative scale.
+- Do not combine major framework upgrades, schema redesigns, and domain refactors in one change.
+- Do not silently change API contracts or persisted data semantics.
+- Treat clinical, genomic, and other sensitive data processing as high-risk changes requiring explicit review.
+- Keep product copy aligned with shipped behavior.
+
+## 11. Change control
+
+Update this guide when a material change affects the application architecture, data boundaries, authorization model, deployment topology, or operational responsibilities. Each significant architecture change should record its context, decision, alternatives considered, consequences, and migration plan in an architecture decision record (ADR) or an equivalent pull-request description.
