@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -146,7 +147,7 @@ export default function AnnotatePage() {
         <section className={panel}>
           {!selectedItem || !selectedAsset ? <div className="flex min-h-64 flex-col items-center justify-center text-center"><p className="font-semibold">Select a dataset item</p><p className="mt-2 max-w-sm text-sm text-slate-500">Choose an item from the queue or add an uploaded asset to begin annotating.</p></div> : <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,.8fr)]">
             <div><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs uppercase tracking-wider text-slate-500">Source asset</p><h2 className="mt-1 break-words text-lg font-semibold">{selectedAsset.original_filename}</h2><p className="mt-1 text-sm text-slate-500">{selectedAsset.modality.replaceAll("_", " ")} · {selectedAsset.status.replaceAll("_", " ")}</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-xs">{selectedItem.status.replaceAll("_", " ")}</span></div>
-              {signedUrl ? <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2"><img src={signedUrl} alt="Private source asset preview" className="max-h-[620px] w-full object-contain" /></div> : <div className="mt-4 flex min-h-56 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">Preview is unavailable for this file type. The private source file remains linked to this item.</div>}
+              {signedUrl ? <div className="relative mt-4 h-[620px] overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2"><Image src={signedUrl} alt="Private source asset preview" fill unoptimized sizes="(max-width: 1280px) 100vw, 60vw" className="object-contain" /></div> : <div className="mt-4 flex min-h-56 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">Preview is unavailable for this file type. The private source file remains linked to this item.</div>}
               <p className="mt-3 text-xs text-slate-500">Preview URL expires after five minutes. Non-image files may not render in the browser.</p>
             </div>
             <form className="space-y-4" onSubmit={e => { e.preventDefault(); void saveAnnotation(false); }}>
