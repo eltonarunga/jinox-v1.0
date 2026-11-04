@@ -35,7 +35,7 @@ export default function EnvironmentalDataPage() {
     const { data, error: queryError } = await supabase.from("environmental_measurements")
       .select("id,sample_site_code,county,sub_county,water_source,sampled_on,fluoride_mg_l,temperature_c,rainfall_mm,source_name")
       .order("sampled_on", { ascending: false }).limit(100);
-    if (queryError) setError(queryError.message);
+    if (queryError) setError("Environmental measurements could not be loaded. Refresh or check your account access.");
     else setRows((data ?? []) as Measurement[]);
   }, [supabase]);
 
@@ -78,7 +78,7 @@ export default function EnvironmentalDataPage() {
       source_name: sourceName.trim(), notes: notes.trim(),
     });
     setBusy(false);
-    if (insertError) { setError(insertError.message); return; }
+    if (insertError) { setError("The measurement could not be saved. Check the required fields and your account access, then try again."); return; }
     setSiteCode(""); setSubCounty(""); setFluoride(""); setTemperature(""); setRainfall(""); setSourceName(""); setNotes("");
     await refresh();
     setNotice("Measurement saved. It is source-attributed research data, not a clinical risk score.");
