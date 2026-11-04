@@ -79,6 +79,12 @@ using (
   )
 );
 
+-- Maintain draft revision timestamps without requiring clients to write the timestamp column.
+drop trigger if exists set_dataset_annotations_updated_at on public.dataset_annotations;
+create trigger set_dataset_annotations_updated_at
+before update on public.dataset_annotations
+for each row execute function public.handle_updated_at();
+
 -- Submit/update an annotation and transition its work item in one transaction.
 -- SECURITY INVOKER preserves table grants and RLS policies for the caller.
 create or replace function public.save_dataset_annotation(
@@ -141,8 +147,7 @@ begin
     update public.dataset_annotations
     set labels = p_labels,
         notes = coalesce(p_notes, ''),
-        status = case when coalesce(p_submit, false) then 'submitted' else 'draft' end,
-        updated_at = now()
+        status = case when coalesce(p_submit, false) then 'submitted' else 'draft' end
     where id = v_annotation.id
     returning * into v_annotation;
   else
