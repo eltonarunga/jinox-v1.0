@@ -317,7 +317,7 @@ begin
     raise exception 'No eligible included records are available for release' using errcode = '22023';
   end if;
 
-  v_checksum := encode(digest(convert_to(v_manifest::text, 'UTF8'), 'sha256'), 'hex');
+  v_checksum := encode(public.digest(convert_to(v_manifest::text, 'UTF8'), 'sha256'), 'hex');
 
   insert into public.dataset_releases (
     dataset_id, release_number, record_count, manifest, manifest_sha256, created_by
