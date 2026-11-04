@@ -255,7 +255,7 @@ begin
     raise exception 'Administrator access required' using errcode = '42501';
   end if;
 
-  if p_decision not in ('approve', 'reject', 'quarantine') then
+  if p_decision is null or p_decision not in ('approve', 'reject', 'quarantine') then
     raise exception 'Unsupported asset review decision' using errcode = '22023';
   end if;
 
