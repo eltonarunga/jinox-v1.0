@@ -1,0 +1,32 @@
+name: Regenerate npm lockfile artifact
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/regenerate-lockfile.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: "npm"
+      - name: Regenerate lockfile from package manifest
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Upload generated lockfile
+        uses: actions/upload-artifact@v7
+        with:
+          name: regenerated-package-lock
+          path: package-lock.json
+          retention-days: 2
