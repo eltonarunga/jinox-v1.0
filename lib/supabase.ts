@@ -3,17 +3,10 @@ import type { County, DatasetSummaryData, ModelPerformanceData, ScreeningRecord 
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Read client (uses public anon key)
 export const supabase: SupabaseClient | null =
   url && anonKey ? createClient(url, anonKey) : null;
-
-// Write client (uses service role key if available, else anon key)
-export const supabaseAdmin: SupabaseClient | null =
-  url && (serviceRoleKey || anonKey)
-    ? createClient(url, serviceRoleKey || anonKey!)
-    : null;
 
 export function isSupabaseConfigured(): boolean {
   return Boolean(supabase);
@@ -134,11 +127,12 @@ export async function fetchDatasetSummaryFromDb(): Promise<DatasetSummaryData | 
  * Persist an anonymized screening event into Supabase
  */
 export async function recordScreeningEvent(screening: ScreeningRecord): Promise<boolean> {
-  const client = supabaseAdmin || supabase;
-  if (!client) return false;
+  // Anonymous screening telemetry is explicitly allowed by the screenings RLS policy.
+  // Keep this public endpoint on the anon client; never bypass RLS with a service-role key.
+  if (!supabase) return false;
 
   try {
-    const { error } = await client.from("screenings").insert({
+    const { error } = await supabase.from("screenings").insert({
       patient_age: screening.patient_age,
       imaging_signal: screening.imaging_signal,
       environmental_signal: screening.environmental_signal,
