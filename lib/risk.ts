@@ -1,3 +1,12 @@
+/**
+ * RESEARCH PROTOTYPE ONLY — NOT A CLINICAL MODEL.
+ *
+ * This heuristic uses seeded county-level values and simulated imaging/genetic
+ * inputs when values are missing. It has not been clinically validated and its
+ * output must not be used for diagnosis, patient triage, or treatment decisions.
+ * The public /api/risk/predict endpoint is intentionally disabled until a
+ * validated model and traceable data pipeline are available.
+ */
 import { getCounty } from "./data";
 import type { RiskInput, RiskOutput, RiskTier } from "./types";
 
