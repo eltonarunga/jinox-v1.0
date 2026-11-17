@@ -1,0 +1,74 @@
+name: Dependency Security Audit
+
+on:
+  push:
+    branches:
+      - main
+      - security/dependency-audit
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: npm dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Generate audit report
+        shell: bash
+        run: |
+          npm audit --json > npm-audit.json || true
+          node <<'NODE'
+          const fs = require("node:fs");
+          const report = JSON.parse(fs.readFileSync("npm-audit.json", "utf8"));
+          const counts = report.metadata?.vulnerabilities ?? {};
+          const rows = Object.entries(report.vulnerabilities ?? {});
+          const summary = [
+            "# Dependency audit",
+            "",
+            "| Severity | Count |",
+            "|---|---:|",
+            ...["critical", "high", "moderate", "low", "info"].map((key) => `|${key}|${counts[key] ?? 0}|`),
+            "",
+            "## Affected packages",
+            "",
+            "| Package | Severity | Direct | Installed range | Fix available |",
+            "|---|---|---:|---|---|",
+            ...rows.map(([name, item]) => `|${name}|${item.severity}|${item.isDirect ? "yes" : "no"}|${item.range ?? "—"}|${item.fixAvailable ? JSON.stringify(item.fixAvailable) : "no"}|`),
+            "",
+            "This report identifies package advisories; it does not prove exploitability in this application. Review dependency paths and compatibility before upgrading."
+          ].join("\n");
+          fs.writeFileSync("npm-audit-summary.md", summary);
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + "\n");
+          console.log(counts);
+          NODE
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-dependency-audit
+          path: |
+            npm-audit.json
+            npm-audit-summary.md
+          if-no-files-found: warn
+          retention-days: 14
