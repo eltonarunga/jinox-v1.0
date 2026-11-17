@@ -33,7 +33,7 @@
     "typescript": "^5.5.3"
   },
   "overrides": {
-    "postcss": "8.5.33",
+    "postcss": "$postcss",
     "postcss-selector-parser": "6.1.6",
     "source-map-js": "1.2.2"
   }
