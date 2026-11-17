@@ -3,6 +3,7 @@ name: Dependency Security Audit
 on:
   push:
     branches:
+      - main
       - security/dependency-audit
   workflow_dispatch:
   schedule:
