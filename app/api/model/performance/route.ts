@@ -1,38 +1,33 @@
 import { NextResponse } from "next/server";
-import { modelPerformance as seededPerformance } from "@/lib/data";
-import { fetchModelPerformanceFromDb } from "@/lib/supabase";
+import { fetchModelPerformanceFromDb, isSupabaseConfigured } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json(
+      { error: { code: "MODEL_EVALUATION_NOT_CONFIGURED", message: "No model evaluation data source is configured." } },
+      { status: 503, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
   try {
-    const dbPerformance = await fetchModelPerformanceFromDb();
-    const isLive = Boolean(dbPerformance);
-    const data = isLive ? dbPerformance! : seededPerformance;
+    const data = await fetchModelPerformanceFromDb();
+    if (!data) {
+      return NextResponse.json(
+        { error: { code: "MODEL_EVALUATION_NOT_FOUND", message: "No model evaluation record is available." } },
+        { status: 404, headers: { "Cache-Control": "no-store" } }
+      );
+    }
 
     return NextResponse.json(
-      {
-        ...data,
-        data_source: isLive ? "supabase" : "seeded-mock",
-        timestamp: new Date().toISOString(),
-      },
-      {
-        status: 200,
-        headers: {
-          "X-Data-Source": isLive ? "supabase" : "seeded-mock",
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-        },
-      }
+      { ...data, data_source: "supabase", timestamp: new Date().toISOString() },
+      { status: 200, headers: { "Cache-Control": "no-store", "X-Data-Source": "supabase" } }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      {
-        error: {
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to load foundational model performance benchmarks.",
-        },
-      },
-      { status: 500 }
+      { error: { code: "MODEL_EVALUATION_DATA_ERROR", message: "Model evaluation data could not be loaded." } },
+      { status: 500, headers: { "Cache-Control": "no-store" } }
     );
   }
 }
