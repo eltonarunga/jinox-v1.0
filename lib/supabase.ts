@@ -24,8 +24,14 @@ export async function fetchCountiesFromDb(): Promise<County[] | null> {
 
   if (error) throw error;
   if (!data || data.length === 0) return null;
+  const attributable = data.filter((item) =>
+    Boolean(item.source) &&
+    Number.isFinite(Number(item.fluoride_ppm)) &&
+    ["low", "mod", "high"].includes(item.risk_tier)
+  );
+  if (attributable.length === 0) return null;
 
-  return data.map((item) => ({
+  return attributable.map((item) => ({
     name: item.name,
     ppm: Number(item.fluoride_ppm),
     level: item.risk_tier,
@@ -49,13 +55,14 @@ export async function fetchCountyFluorideFromDb(
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) return null;
+  if (!data || !data.source || !Number.isFinite(Number(data.fluoride_ppm)) ||
+      !["low", "mod", "high"].includes(data.risk_tier)) return null;
 
   return {
     county: data.name,
     ppm: Number(data.fluoride_ppm),
     tier: data.risk_tier,
-    source: data.source || "Source not recorded",
+    source: data.source,
   };
 }
 
