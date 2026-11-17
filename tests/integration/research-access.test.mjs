@@ -186,10 +186,10 @@ const reviewVars = [
   "JINOX_TEST_ASSET_REVIEW_CONCURRENT_ID",
 ];
 const missingReview = reviewVars.filter((key) => !env[key]);
-const reviewEnabled = missingReview.length === 0;
+const reviewEnabled = baseEnabled && missingReview.length === 0;
 
 test("only a non-owner global admin can make audited asset review decisions", {
-  skip: !reviewEnabled ? `Set staging-only variables: ${missingReview.join(", ")}` : false,
+  skip: !reviewEnabled ? `Set staging-only variables: ${[...missingBase, ...missingReview].join(", ")}` : false,
 }, async () => {
   const admin = clientFor(env.JINOX_TEST_ASSET_REVIEW_ADMIN_TOKEN);
   const nonAdmin = clientFor(env.JINOX_TEST_ASSET_REVIEW_NON_ADMIN_TOKEN);
@@ -313,10 +313,10 @@ const curationVars = [
   "JINOX_TEST_CURATION_UNRELATED_TOKEN",
 ];
 const missingCuration = curationVars.filter((key) => !env[key]);
-const curationEnabled = missingCuration.length === 0;
+const curationEnabled = baseEnabled && missingCuration.length === 0;
 
 test("curation is role-gated, eligibility-checked and append-only; release manifests are immutable", {
-  skip: !curationEnabled ? `Set staging-only variables: ${missingCuration.join(", ")}` : false,
+  skip: !curationEnabled ? `Set staging-only variables: ${[...missingBase, ...missingCuration].join(", ")}` : false,
 }, async () => {
   const owner = clientFor(env.JINOX_TEST_CURATION_OWNER_TOKEN);
   const reviewer = clientFor(env.JINOX_TEST_CURATION_REVIEWER_TOKEN);
