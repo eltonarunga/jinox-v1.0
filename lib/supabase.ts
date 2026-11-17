@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import type { County, DatasetSummaryData, ModelPerformanceData, ScreeningRecord } from "./types";
+import type { County, DatasetSummaryData, ScreeningRecord } from "./types";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
@@ -63,31 +63,6 @@ export async function fetchCountyFluorideFromDb(
     ppm: Number(data.fluoride_ppm),
     tier: data.risk_tier,
     source: data.source,
-  };
-}
-
-/**
- * Fetch the latest stored model evaluation record.
- * Presence in the database does not by itself establish clinical validation.
- */
-export async function fetchModelPerformanceFromDb(): Promise<ModelPerformanceData | null> {
-  if (!supabase) return null;
-  const { data, error } = await supabase
-    .from("model_versions")
-    .select("version, auc, min_subgroup_auc, evaluated_subgroups, released_at")
-    .order("released_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!data) return null;
-
-  return {
-    model_version: data.version,
-    auc: Number(data.auc),
-    min_subgroup_auc: Number(data.min_subgroup_auc || data.auc),
-    evaluated_subgroups: data.evaluated_subgroups || [],
-    last_updated: data.released_at,
   };
 }
 
