@@ -4,8 +4,8 @@ export interface County {
   name: string;
   ppm: number;
   level: RiskTier;
-  screened: number;
-  referralRate: string;
+  screened?: number;
+  referralRate?: string;
   source?: string;
 }
 

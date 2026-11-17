@@ -1,38 +1,19 @@
 import { NextResponse } from "next/server";
-import { modelPerformance as seededPerformance } from "@/lib/data";
-import { fetchModelPerformanceFromDb } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Model evaluation is not yet connected to a reproducible evaluation pipeline.
+ * Do not expose legacy model_versions rows as validated performance metrics.
+ */
 export async function GET() {
-  try {
-    const dbPerformance = await fetchModelPerformanceFromDb();
-    const isLive = Boolean(dbPerformance);
-    const data = isLive ? dbPerformance! : seededPerformance;
-
-    return NextResponse.json(
-      {
-        ...data,
-        data_source: isLive ? "supabase" : "seeded-mock",
-        timestamp: new Date().toISOString(),
+  return NextResponse.json(
+    {
+      error: {
+        code: "MODEL_EVALUATION_NOT_AVAILABLE",
+        message: "Model performance reporting is unavailable until a reproducible evaluation pipeline and evidence-backed evaluation records are connected.",
       },
-      {
-        status: 200,
-        headers: {
-          "X-Data-Source": isLive ? "supabase" : "seeded-mock",
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-        },
-      }
-    );
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to load foundational model performance benchmarks.",
-        },
-      },
-      { status: 500 }
-    );
-  }
+    },
+    { status: 503, headers: { "Cache-Control": "no-store" } }
+  );
 }

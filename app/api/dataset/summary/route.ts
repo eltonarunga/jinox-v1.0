@@ -1,38 +1,33 @@
 import { NextResponse } from "next/server";
-import { datasetSummary as seededSummary } from "@/lib/data";
-import { fetchDatasetSummaryFromDb } from "@/lib/supabase";
+import { fetchDatasetSummaryFromDb, isSupabaseConfigured } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json(
+      { error: { code: "DATA_SOURCE_NOT_CONFIGURED", message: "Dataset summary data is not configured for this deployment." } },
+      { status: 503, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
   try {
-    const dbSummary = await fetchDatasetSummaryFromDb();
-    const isLive = Boolean(dbSummary);
-    const data = isLive ? dbSummary! : seededSummary;
+    const data = await fetchDatasetSummaryFromDb();
+    if (!data) {
+      return NextResponse.json(
+        { error: { code: "DATASET_SUMMARY_NOT_FOUND", message: "No dataset snapshot is currently available." } },
+        { status: 404, headers: { "Cache-Control": "no-store" } }
+      );
+    }
 
     return NextResponse.json(
-      {
-        ...data,
-        data_source: isLive ? "supabase" : "seeded-mock",
-        timestamp: new Date().toISOString(),
-      },
-      {
-        status: 200,
-        headers: {
-          "X-Data-Source": isLive ? "supabase" : "seeded-mock",
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-        },
-      }
+      { ...data, data_source: "supabase", timestamp: new Date().toISOString() },
+      { status: 200, headers: { "Cache-Control": "no-store", "X-Data-Source": "supabase" } }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      {
-        error: {
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to load dataset registry summary.",
-        },
-      },
-      { status: 500 }
+      { error: { code: "DATA_SOURCE_ERROR", message: "Dataset summary data could not be loaded." } },
+      { status: 500, headers: { "Cache-Control": "no-store" } }
     );
   }
 }

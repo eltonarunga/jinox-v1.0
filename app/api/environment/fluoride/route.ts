@@ -1,86 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllCountyNames, getCounty, whoGuidelinePpm, severeEndemicThresholdPpm } from "@/lib/data";
-import { fetchCountyFluorideFromDb } from "@/lib/supabase";
+import { whoGuidelinePpm, severeEndemicThresholdPpm } from "@/lib/data";
+import { fetchCountyFluorideFromDb, isSupabaseConfigured } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const rawCounty = req.nextUrl.searchParams.get("county");
+  if (!rawCounty || !/^[A-Za-z][A-Za-z .'-]{1,79}$/.test(rawCounty.trim())) {
+    return NextResponse.json(
+      { error: { code: "BAD_REQUEST", message: "Provide a valid county name using letters, spaces, apostrophes, periods or hyphens." } },
+      { status: 400, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json(
+      { error: { code: "DATA_SOURCE_NOT_CONFIGURED", message: "County fluoride surveillance data is not configured for this deployment." } },
+      { status: 503, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
   try {
-    const rawCounty = req.nextUrl.searchParams.get("county");
-
-    if (!rawCounty || typeof rawCounty !== "string" || rawCounty.trim().length === 0) {
+    const dbRecord = await fetchCountyFluorideFromDb(rawCounty.trim());
+    if (!dbRecord) {
       return NextResponse.json(
-        {
-          error: {
-            code: "BAD_REQUEST",
-            message: "Query parameter 'county' is required.",
-            available_counties: getAllCountyNames(),
-          },
-        },
-        { status: 400 }
+        { error: { code: "SURVEILLANCE_RECORD_NOT_FOUND", message: "No source-attributed fluoride surveillance record is available for the requested county." } },
+        { status: 404, headers: { "Cache-Control": "no-store" } }
       );
     }
 
-    const countyQuery = rawCounty.trim();
-
-    // Attempt live Supabase read first
-    const dbRecord = await fetchCountyFluorideFromDb(countyQuery);
-
-    // Fallback to local dataset if Supabase is unconfigured or record not found
-    const localRecord = getCounty(countyQuery);
-
-    if (!dbRecord && !localRecord) {
-      return NextResponse.json(
-        {
-          error: {
-            code: "NOT_FOUND",
-            message: `No fluoride surveillance reading on file for county "${countyQuery}"`,
-            available_counties: getAllCountyNames(),
-          },
-        },
-        { status: 404 }
-      );
-    }
-
-    const countyName = dbRecord?.county || localRecord!.name;
-    const fluoridePpm = dbRecord?.ppm ?? localRecord!.ppm;
-    const riskTier = dbRecord?.tier || localRecord!.level;
-    const source = dbRecord?.source || localRecord!.source || "WRMA water quality survey";
-    const isLive = Boolean(dbRecord);
-
-    const isExceedingWho = fluoridePpm > whoGuidelinePpm;
-    const isSevereEndemic = fluoridePpm >= severeEndemicThresholdPpm;
+    const isExceedingWho = dbRecord.ppm > whoGuidelinePpm;
+    const isSevereEndemic = dbRecord.ppm >= severeEndemicThresholdPpm;
 
     return NextResponse.json(
       {
-        county: countyName,
-        fluoride_ppm: fluoridePpm,
+        county: dbRecord.county,
+        fluoride_ppm: dbRecord.ppm,
         who_guideline_ppm: whoGuidelinePpm,
         exceeds_who_threshold: isExceedingWho,
         is_severe_endemic_zone: isSevereEndemic,
-        ratio_to_who_limit: Number((fluoridePpm / whoGuidelinePpm).toFixed(2)),
-        risk_tier: riskTier,
-        surveillance_source: source,
-        data_source: isLive ? "supabase" : "seeded-mock",
+        ratio_to_who_limit: Number((dbRecord.ppm / whoGuidelinePpm).toFixed(2)),
+        risk_tier: dbRecord.tier,
+        surveillance_source: dbRecord.source,
+        data_source: "supabase",
         timestamp: new Date().toISOString(),
       },
-      {
-        status: 200,
-        headers: {
-          "X-Data-Source": isLive ? "supabase" : "seeded-mock",
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
-        },
-      }
+      { status: 200, headers: { "Cache-Control": "no-store", "X-Data-Source": "supabase" } }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      {
-        error: {
-          code: "INTERNAL_SERVER_ERROR",
-          message: "An unexpected error occurred while resolving fluoride telemetry.",
-        },
-      },
-      { status: 500 }
+      { error: { code: "DATA_SOURCE_ERROR", message: "County fluoride surveillance data could not be loaded." } },
+      { status: 500, headers: { "Cache-Control": "no-store" } }
     );
   }
 }
