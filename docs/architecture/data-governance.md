@@ -75,3 +75,10 @@ Applicable Kenyan and East African privacy, research ethics, health-data, and da
 ## Important distinction
 
 A governance record in the application is not itself proof of formal ethics approval or legal compliance. The project must verify supporting documents and operational controls. Product status labels must reflect verified evidence, not self-attestation alone.
+
+
+## Public data endpoints and demo fixtures
+
+Public county, fluoride-surveillance, dataset-summary, and model-performance endpoints must return only records read from the configured database. They must not fall back to local seeded fixtures when the database is empty or unavailable. Missing data should be represented as an explicit unavailable/not-found response, not a synthetic zero, estimated referral rate, or demo metric.
+
+A database row is not automatically a verified scientific result. County readings require source and sampling provenance; dataset snapshots require a defined counting method and coverage scope; model metrics require an identified evaluation dataset, protocol, cohort, and reproducible result. Until those records exist, the corresponding endpoint should remain empty or unavailable. Local fixtures may be used in isolated development tests only and must be visibly labelled as synthetic.
