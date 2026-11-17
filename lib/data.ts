@@ -15,7 +15,8 @@ export const whoGuidelinePpm = 1.5;
 // High endemic risk threshold for East African Rift Valley formations (4.0 ppm)
 export const severeEndemicThresholdPpm = 4.0;
 
-// Seeded counties dataset reflecting Kenya Rift Valley & surrounding counties
+// DEMO FIXTURES ONLY — never use these values as surveillance, clinical, or research evidence.
+// Public APIs must read source-attributed records from the configured database.
 export const counties: County[] = [
   { name: "Nakuru", ppm: 4.8, level: "high", screened: 1240, referralRate: "18%", source: "WRMA water quality survey" },
   { name: "Baringo", ppm: 6.1, level: "high", screened: 860, referralRate: "24%", source: "WRMA water quality survey" },
@@ -27,6 +28,7 @@ export const counties: County[] = [
   { name: "Machakos", ppm: 2.6, level: "mod", screened: 590, referralRate: "11%", source: "WRMA water quality survey" },
 ];
 
+// Synthetic example metrics for isolated UI development only; not an evaluated model.
 export const modelPerformance: ModelPerformanceData = {
   model_version: "jinox-mm-0.3",
   auc: 0.85,
@@ -37,6 +39,7 @@ export const modelPerformance: ModelPerformanceData = {
   last_updated: "2026-08-15T00:00:00Z",
 };
 
+// Synthetic example counts for isolated UI development only; not a measured dataset.
 export const datasetSummary: DatasetSummaryData = {
   records: 52340,
   counties_covered: 22,
@@ -45,7 +48,7 @@ export const datasetSummary: DatasetSummaryData = {
   last_ingestion: "2026-09-01T12:00:00Z",
 };
 
-// 18-month program targets categorized for clear public health governance
+// Synthetic product-planning targets only; these are not current operational results.
 export const dashboardStats: DashboardStatItem[] = [
   { label: "Annotated records", current: "12,400", target: "50,000+", pct: 25, category: "research" },
   { label: "Diagnostic AUC", current: "0.85", target: ">0.85", pct: 85, category: "diagnostics" },
