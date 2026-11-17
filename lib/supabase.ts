@@ -13,118 +13,103 @@ export function isSupabaseConfigured(): boolean {
 }
 
 /**
- * Fetch all counties from Supabase with graceful fallback
+ * Fetch county surveillance records. No synthetic fallback values are generated.
  */
 export async function fetchCountiesFromDb(): Promise<County[] | null> {
   if (!supabase) return null;
-  try {
-    const { data, error } = await supabase
-      .from("counties")
-      .select("name, fluoride_ppm, risk_tier")
-      .order("name", { ascending: true });
+  const { data, error } = await supabase
+    .from("counties")
+    .select("name, fluoride_ppm, risk_tier, screened_count, referral_rate, source")
+    .order("name", { ascending: true });
 
-    if (error || !data || data.length === 0) return null;
+  if (error) throw error;
+  if (!data || data.length === 0) return null;
 
-    return data.map((item) => ({
-      name: item.name,
-      ppm: Number(item.fluoride_ppm),
-      level: item.risk_tier,
-      screened: 0,
-      referralRate: item.risk_tier === "high" ? "20%" : item.risk_tier === "mod" ? "10%" : "3%",
-      source: "Supabase Live Database",
-    }));
-  } catch (err) {
-    console.warn("Error reading from Supabase counties table:", err);
-    return null;
-  }
+  return data.map((item) => ({
+    name: item.name,
+    ppm: Number(item.fluoride_ppm),
+    level: item.risk_tier,
+    screened: item.screened_count == null ? undefined : Number(item.screened_count),
+    referralRate: item.referral_rate ?? undefined,
+    source: item.source ?? undefined,
+  }));
 }
 
 /**
- * Fetch fluoride data for a specific county from Supabase
+ * Fetch a source-attributed fluoride record for one county.
  */
 export async function fetchCountyFluorideFromDb(
   countyName: string
 ): Promise<{ county: string; ppm: number; tier: "low" | "mod" | "high"; source: string } | null> {
   if (!supabase) return null;
-  try {
-    const { data, error } = await supabase
-      .from("counties")
-      .select("name, fluoride_ppm, risk_tier, source")
-      .ilike("name", countyName)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from("counties")
+    .select("name, fluoride_ppm, risk_tier, source")
+    .ilike("name", countyName)
+    .maybeSingle();
 
-    if (error || !data) return null;
+  if (error) throw error;
+  if (!data) return null;
 
-    return {
-      county: data.name,
-      ppm: Number(data.fluoride_ppm),
-      tier: data.risk_tier,
-      source: data.source || "Supabase Live Database",
-    };
-  } catch (err) {
-    console.warn("Error reading county from Supabase:", err);
-    return null;
-  }
+  return {
+    county: data.name,
+    ppm: Number(data.fluoride_ppm),
+    tier: data.risk_tier,
+    source: data.source || "Source not recorded",
+  };
 }
 
 /**
- * Fetch latest model version performance from Supabase
+ * Fetch the latest stored model evaluation record.
+ * Presence in the database does not by itself establish clinical validation.
  */
 export async function fetchModelPerformanceFromDb(): Promise<ModelPerformanceData | null> {
   if (!supabase) return null;
-  try {
-    const { data, error } = await supabase
-      .from("model_versions")
-      .select("version, auc, min_subgroup_auc, evaluated_subgroups, released_at")
-      .order("released_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from("model_versions")
+    .select("version, auc, min_subgroup_auc, evaluated_subgroups, released_at")
+    .order("released_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-    if (error || !data) return null;
+  if (error) throw error;
+  if (!data) return null;
 
-    return {
-      model_version: data.version,
-      auc: Number(data.auc),
-      min_subgroup_auc: Number(data.min_subgroup_auc || data.auc),
-      evaluated_subgroups: data.evaluated_subgroups || [],
-      last_updated: data.released_at,
-    };
-  } catch (err) {
-    console.warn("Error reading model performance from Supabase:", err);
-    return null;
-  }
+  return {
+    model_version: data.version,
+    auc: Number(data.auc),
+    min_subgroup_auc: Number(data.min_subgroup_auc || data.auc),
+    evaluated_subgroups: data.evaluated_subgroups || [],
+    last_updated: data.released_at,
+  };
 }
 
 /**
- * Fetch dataset snapshot from Supabase
+ * Fetch the latest stored dataset snapshot.
  */
 export async function fetchDatasetSummaryFromDb(): Promise<DatasetSummaryData | null> {
   if (!supabase) return null;
-  try {
-    const { data, error } = await supabase
-      .from("dataset_snapshots")
-      .select("record_count, counties_covered, modalities, license, captured_at")
-      .order("captured_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from("dataset_snapshots")
+    .select("record_count, counties_covered, modalities, license, captured_at")
+    .order("captured_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-    if (error || !data) return null;
+  if (error) throw error;
+  if (!data) return null;
 
-    return {
-      records: data.record_count,
-      counties_covered: data.counties_covered,
-      modalities: data.modalities || [],
-      license: data.license || "open-academic-use",
-      last_ingestion: data.captured_at,
-    };
-  } catch (err) {
-    console.warn("Error reading dataset summary from Supabase:", err);
-    return null;
-  }
+  return {
+    records: data.record_count,
+    counties_covered: data.counties_covered,
+    modalities: data.modalities || [],
+    license: data.license || "Unspecified",
+    last_ingestion: data.captured_at,
+  };
 }
 
 /**
- * Persist an anonymized screening event into Supabase
+ * Persist an anonymized screening event into Supabase.
  */
 export async function recordScreeningEvent(screening: ScreeningRecord): Promise<boolean> {
   // Anonymous screening telemetry is explicitly allowed by the screenings RLS policy.
