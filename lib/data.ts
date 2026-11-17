@@ -70,7 +70,7 @@ export function getAllCountyNames(): string[] {
 }
 
 export function getFluorosisSummaryStats() {
-  const totalScreened = counties.reduce((acc, c) => acc + c.screened, 0);
+  const totalScreened = counties.reduce((acc, c) => acc + (c.screened ?? 0), 0);
   const avgPpm = (counties.reduce((acc, c) => acc + c.ppm, 0) / counties.length).toFixed(2);
   const highRiskCount = counties.filter((c) => c.level === "high").length;
   return {
