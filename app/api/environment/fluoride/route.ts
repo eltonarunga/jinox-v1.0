@@ -6,9 +6,9 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const rawCounty = req.nextUrl.searchParams.get("county");
-  if (!rawCounty || rawCounty.trim().length === 0) {
+  if (!rawCounty || !/^[A-Za-z][A-Za-z .'-]{1,79}$/.test(rawCounty.trim())) {
     return NextResponse.json(
-      { error: { code: "BAD_REQUEST", message: "Query parameter 'county' is required." } },
+      { error: { code: "BAD_REQUEST", message: "Provide a valid county name using letters, spaces, apostrophes, periods or hyphens." } },
       { status: 400, headers: { "Cache-Control": "no-store" } }
     );
   }
