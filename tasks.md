@@ -1,7 +1,7 @@
 # JinoX AI — Product and engineering backlog
 
 **Status:** Active backlog  
-**Last reviewed:** 2026-11-04  
+**Last reviewed:** 2026-11-17  
 **Prioritization:** P0 = security/release blocker; P1 = core data operations; P2 = model development and scale; P3 = gated research expansion
 
 This backlog is organized around JinoX's AI data operations business: collect, curate, annotate, quality-check, deliver datasets, then support model training and evaluation. See [the product operating model](docs/product/operating-model.md) and [roadmap](planning.md).
@@ -18,10 +18,12 @@ This backlog is organized around JinoX's AI data operations business: collect, c
 ## P0 — Security and platform foundation
 
 ### JX-001 — Dependency security remediation
-**Status:** Pending · **Milestone:** M1  
-Refresh the dependency audit, classify direct/transitive findings, upgrade to a supported patched Next.js release, review compatibility, and regenerate the lockfile.
+**Status:** In progress — partial remediation merged · **Milestone:** M1  
+The dependency baseline has been upgraded and the lockfile is reproducible. PR #58 moved the application to Next.js 15.5.29 and restored npm ci; PR #62 updated the TypeScript ESLint toolchain; PR #63 patched PostCSS, postcss-selector-parser, and source-map-js.
 
-**Acceptance:** No unresolved critical/high production advisory without accepted-risk mitigation; clean build and all checks pass; upgrade notes documented; no blind force-upgrade.
+The latest audit on 2026-11-17 reports 18 high-severity package findings and no critical, moderate, or low findings. The affected entries are development/tooling dependencies in the current lockfile. They converge on the picomatch ReDoS advisory GHSA-fc5q-39xc-vjpf (CVE-2026-112366), including transitive paths through tinyglobby, micromatch, fast-glob, and Tailwind/ESLint tooling. The advisory affects picomatch through 4.0.7 and currently has no publisher-stated fixed version. Do not force a major Tailwind/Next.js migration or override to an unverified fork merely to make npm audit green. Recheck the upstream advisory and package releases on each scheduled audit.
+
+**Acceptance:** No unresolved critical/high production advisory without accepted-risk mitigation; clean build and all checks pass; upgrade notes documented; no blind force-upgrade. Remaining tooling advisory is explicitly tracked, reviewed, and rechecked until an upstream patch is available.
 
 ### JX-002 — Environment configuration and startup validation
 **Status:** In progress / verify after PR #42 · **Milestone:** M1  
@@ -174,6 +176,12 @@ Research additional scientific capabilities only under separate approved protoco
 - [x] Consolidated primary navigation and simplified workflow pages — [PR #39](https://github.com/eltonarunga/jinox-v1.0/pull/39).
 - [x] Cleaned annotation/environment page lint issues, corrected effect dependencies, and improved private asset preview handling — [PR #40](https://github.com/eltonarunga/jinox-v1.0/pull/40).
 - [x] Hardened public Supabase URL validation, added unit tests, and corrected environment template guidance — [PR #42](https://github.com/eltonarunga/jinox-v1.0/pull/42).
+- [x] Hardened GitHub Actions permissions/concurrency and moved CI to reproducible npm ci installs — [PRs #54–#58](https://github.com/eltonarunga/jinox-v1.0/pulls?q=is%3Apr+is%3Amerged).
+- [x] Removed the generic service-role client from the public screening write path — [PR #57](https://github.com/eltonarunga/jinox-v1.0/pull/57).
+- [x] Removed unverified seeded-data fallbacks and documented data-governance requirements — [PR #60](https://github.com/eltonarunga/jinox-v1.0/pull/60).
+- [x] Added scheduled dependency auditing and retained machine-readable plus human-readable audit artifacts — [PR #61](https://github.com/eltonarunga/jinox-v1.0/pull/61).
+- [x] Updated the TypeScript ESLint dependency chain — [PR #62](https://github.com/eltonarunga/jinox-v1.0/pull/62).
+- [x] Patched PostCSS, postcss-selector-parser, and source-map-js dependencies without a Tailwind/Next.js major migration — [PR #63](https://github.com/eltonarunga/jinox-v1.0/pull/63).
 
 ## Backlog maintenance
 
