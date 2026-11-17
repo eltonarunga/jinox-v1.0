@@ -21,7 +21,7 @@ This backlog is organized around JinoX's AI data operations business: collect, c
 **Status:** In progress — partial remediation merged · **Milestone:** M1  
 The dependency baseline has been upgraded and the lockfile is reproducible. PR #58 moved the application to Next.js 15.5.29 and restored npm ci; PR #62 updated the TypeScript ESLint toolchain; PR #63 patched PostCSS, postcss-selector-parser, and source-map-js.
 
-The latest audit on 2026-11-17 reports 18 high-severity package findings and no critical, moderate, or low findings. The affected entries are development/tooling dependencies in the current lockfile. They converge on the picomatch ReDoS advisory GHSA-fc5q-39xc-vjpf (CVE-2026-112366), including transitive paths through tinyglobby, micromatch, fast-glob, and Tailwind/ESLint tooling. The advisory affects picomatch through 4.0.7 and currently has no publisher-stated fixed version. Do not force a major Tailwind/Next.js migration or override to an unverified fork merely to make npm audit green. Recheck the upstream advisory and package releases on each scheduled audit.
+The latest audit on 2026-11-17 reports 18 high-severity vulnerable package entries and no critical, moderate, or low entries. These are not 18 independent advisories: the audit dependency graph traces them through a shared transitive `picomatch` ReDoS advisory, GHSA-fc5q-39xc-vjpf (CVSS 7.5), affecting `picomatch` versions through 4.0.7. The vulnerable path reaches tooling packages including `tinyglobby`, `micromatch`, `fast-glob`, `anymatch`, `chokidar`, Tailwind CSS, and the TypeScript ESLint dependency chain. The affected package entries are in the development/tooling dependency graph; this audit alone does not establish exploitability in the deployed application. The current npm report offers major-version migration suggestions (notably Tailwind CSS 4) rather than a verified compatible `picomatch` patch. Do not force a major Tailwind/Next.js migration or override to an unverified fork merely to make npm audit green. Recheck the upstream advisory and package releases on each scheduled audit.
 
 **Acceptance:** No unresolved critical/high production advisory without accepted-risk mitigation; clean build and all checks pass; upgrade notes documented; no blind force-upgrade. Remaining tooling advisory is explicitly tracked, reviewed, and rechecked until an upstream patch is available.
 
@@ -32,8 +32,10 @@ Reconcile environment template, Supabase clients, middleware, and startup behavi
 **Acceptance:** Every variable has purpose and exposure classification; browser and server secrets are separated; configuration errors are actionable; no secrets committed.
 
 ### JX-003 — Reproducible dependency installation
-**Status:** Pending · **Milestone:** M1  
-Verify package/lockfile consistency and move CI to `npm ci`.
+**Status:** Complete · **Milestone:** M1  
+CI installs from the committed lockfile using `npm ci`. The lockfile was regenerated through npm in GitHub Actions and committed with the dependency updates.
+
+**Verification:** PR #58 and subsequent CI runs on PRs #62–#64 passed dependency installation, unit tests, type checking, lint, and application build. Staging authorization integration coverage remains separately unverified where required credentials/fixtures are unavailable.
 
 **Acceptance:** Clean install succeeds from lockfile; CI and contributor Node/npm versions align; dependency changes update lockfile in the same PR.
 
