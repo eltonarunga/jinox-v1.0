@@ -1,7 +1,7 @@
 # JinoX AI — Product and engineering backlog
 
 **Status:** Active backlog  
-**Last reviewed:** 2026-11-17  
+**Last reviewed:** 2026-11-18  
 **Prioritization:** P0 = security/release blocker; P1 = core data operations; P2 = model development and scale; P3 = gated research expansion
 
 This backlog is organized around JinoX's AI data operations business: collect, curate, annotate, quality-check, deliver datasets, then support model training and evaluation. See [the product operating model](docs/product/operating-model.md) and [roadmap](planning.md).
@@ -110,14 +110,14 @@ Define modality/task-specific completeness, duplicates, label distribution, miss
 **Acceptance:** Metrics have definitions and denominators; unverified values remain visible; reports include limitations and coverage gaps.
 
 ### JX-015 — Versioned dataset release and manifest
-**Status:** Pending · **Milestone:** M3  
-Implement immutable releases with manifests, checksums, schema/guideline versions, provenance summaries, quality reports, and approvals.
+**Status:** In progress — immutable eligibility manifest implemented; export-grade release controls remain pending · **Milestone:** M3  
+The current release RPC creates a hashed, append-only eligibility manifest. It does not yet pin a relational release-membership record for exact annotation revisions, verify source bytes against stored checksums, or include the full quality/provenance approval package. See [dataset export and controlled delivery architecture](docs/architecture/dataset-export-delivery.md) (PR #69) for the proposed design.
 
 **Acceptance:** Release blocked when governance or quality gates fail; artifacts are reproducible; every release is traceable and audited.
 
 ### JX-016 — Permissioned dataset delivery and export
-**Status:** Pending · **Milestone:** M3  
-Implement customer/partner-scoped exports, delivery formats, access expiry, audit, and withdrawal/retention handling.
+**Status:** Pending — architecture documented; implementation blocked on JX-004, JX-005, JX-006 and JX-017 · **Milestone:** M3  
+Implement customer/partner-scoped exports, delivery formats, access expiry, audit, and withdrawal/retention handling. Do not expose files until byte-level integrity, malware/content validation, de-identification, permitted-use checks and staging authorization are verified.
 
 **Acceptance:** Server-side authorization; scope matches permitted use; delivery events are auditable; revoked/expired access is denied.
 
@@ -184,6 +184,7 @@ Research additional scientific capabilities only under separate approved protoco
 - [x] Added scheduled dependency auditing and retained machine-readable plus human-readable audit artifacts — [PR #61](https://github.com/eltonarunga/jinox-v1.0/pull/61).
 - [x] Updated the TypeScript ESLint dependency chain — [PR #62](https://github.com/eltonarunga/jinox-v1.0/pull/62).
 - [x] Patched PostCSS, postcss-selector-parser, and source-map-js dependencies without a Tailwind/Next.js major migration — [PR #63](https://github.com/eltonarunga/jinox-v1.0/pull/63).
+- [x] Documented the controlled dataset export architecture, explicitly distinguishing metadata releases from actual export packages — [PR #69](https://github.com/eltonarunga/jinox-v1.0/pull/69).
 
 ## Backlog maintenance
 
