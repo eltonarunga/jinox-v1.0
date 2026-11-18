@@ -84,7 +84,7 @@ export default function DataIntakePage() {
       .from("clinical_cases")
       .select("id,case_code,county,age_band,purpose,consent_status,created_at")
       .order("created_at", { ascending: false });
-    if (queryError) { setError(queryError.message); return; }
+    if (queryError) { setError("Could not load cases. Refresh the page and try again."); return; }
     const nextCases = (data ?? []) as CaseRecord[];
     setCases(nextCases);
     const nextId = preferredId && nextCases.some((item) => item.id === preferredId)
@@ -101,9 +101,9 @@ export default function DataIntakePage() {
       supabase.from("clinical_assets").select("id,modality,original_filename,byte_size,status,uploaded_at").eq("case_id", caseId).order("uploaded_at", { ascending: false }),
       supabase.from("clinical_observations").select("id,category,observation_code,finding,observed_on,status").eq("case_id", caseId).order("observed_on", { ascending: false }),
     ]);
-    if (assetResult.error) setError(assetResult.error.message);
+    if (assetResult.error) setError("Could not load source files for this case.");
     else setAssets((assetResult.data ?? []) as AssetRecord[]);
-    if (observationResult.error) setError(observationResult.error.message);
+    if (observationResult.error) setError("Could not load clinical observations for this case.");
     else setObservations((observationResult.data ?? []) as ObservationRecord[]);
   }, [supabase]);
 
@@ -143,7 +143,7 @@ export default function DataIntakePage() {
       consent_version: "jinox-intake-v1",
     }).select("id").single();
     setBusy(false);
-    if (insertError) { setError(insertError.message.includes("duplicate") ? "That case code already exists in your workspace." : insertError.message); return; }
+    if (insertError) { setError(insertError.code === "23505" ? "That case code already exists in your workspace." : "Could not create the case. Check the required fields and your workspace access, then try again."); return; }
     setCaseCode(""); setConsentConfirmed(false);
     await refreshCases(data.id);
     setNotice("Case created. Uploads will remain private and pending review.");
@@ -167,7 +167,7 @@ export default function DataIntakePage() {
         const checksum = await sha256(file);
         const { data: duplicate, error: duplicateError } = await supabase.from("clinical_assets")
           .select("id").eq("case_id", selectedCaseId).eq("checksum_sha256", checksum).maybeSingle();
-        if (duplicateError) { setError(duplicateError.message); return; }
+        if (duplicateError) { setError("Could not verify whether this file was uploaded before. Try again."); return; }
         if (duplicate) { setError(`${file.name}: this exact structured file has already been uploaded to this case.`); return; }
         structuredChecksums.set(file, checksum);
       }
@@ -188,7 +188,7 @@ export default function DataIntakePage() {
         cacheControl: "3600",
         upsert: false,
       });
-      if (storageError) { failures.push(`${file.name}: ${storageError.message}`); continue; }
+      if (storageError) { failures.push(`${file.name}: upload could not be completed. Check your connection and try again.`); continue; }
       const { data: asset, error: metadataError } = await supabase.from("clinical_assets").insert({
         case_id: selectedCaseId,
         owner_id: userId,
@@ -203,7 +203,7 @@ export default function DataIntakePage() {
       }).select("id").single();
       if (metadataError || !asset) {
         await supabase.storage.from("jinox-clinical-assets").remove([storagePath]);
-        failures.push(`${file.name}: file metadata could not be saved (${metadataError?.message ?? "missing asset record"}).`);
+        failures.push(`${file.name}: the file could not be registered. Please retry or contact your workspace administrator.`);
       } else {
         succeeded += 1;
         if (modality === "clinical_record" || modality === "environmental_dataset") {
@@ -230,7 +230,7 @@ export default function DataIntakePage() {
               await supabase.from("clinical_assets").delete().eq("id", asset.id);
               await supabase.storage.from("jinox-clinical-assets").remove([storagePath]);
               succeeded -= 1;
-              failures.push(`${file.name}: clinical row import failed; the partial file upload was rolled back (${importError.message})`);
+              failures.push(`${file.name}: clinical rows could not be imported; the partial file upload was rolled back.`);
             } else importedClinicalRows += observationsToInsert.length;
           } else {
             const measurementsToInsert = parsed.records.map((record, rowIndex) => ({
@@ -254,7 +254,7 @@ export default function DataIntakePage() {
               await supabase.from("clinical_assets").delete().eq("id", asset.id);
               await supabase.storage.from("jinox-clinical-assets").remove([storagePath]);
               succeeded -= 1;
-              failures.push(`${file.name}: environmental row import failed; the partial file upload was rolled back (${importError.message})`);
+              failures.push(`${file.name}: environmental rows could not be imported; the partial file upload was rolled back.`);
             } else importedEnvironmentalRows += measurementsToInsert.length;
           }
         }
@@ -283,7 +283,7 @@ export default function DataIntakePage() {
       status: "unreviewed",
     });
     setBusy(false);
-    if (insertError) { setError(insertError.message); return; }
+    if (insertError) { setError("Could not save the observation. Check your workspace access and try again."); return; }
     setFinding("");
     await refreshCaseDetails(selectedCaseId);
     setNotice("Observation saved as unreviewed. It is a recorded finding, not an AI-generated diagnosis.");
