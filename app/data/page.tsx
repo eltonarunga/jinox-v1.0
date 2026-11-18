@@ -311,9 +311,18 @@ export default function DataIntakePage() {
         {error && <div role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
         {notice && <div role="status" className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</div>}
 
-        <div className="mt-6 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-          <section className={panel}>
-            <h2 className="text-lg font-semibold">1. Create a case</h2>
+        <nav aria-label="Data intake steps" className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 p-3 sm:p-4">
+          <ol className="grid gap-2 sm:grid-cols-3">
+            <li><a href="#create-case" className="flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-neutral-800 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900"><span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-semibold text-white">1</span><span>Create a case</span></a></li>
+            <li><a href="#upload-files" className="flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-neutral-800 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900"><span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white text-xs font-semibold">2</span><span>Upload source files</span></a></li>
+            <li><a href="#record-observation" className="flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-neutral-800 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900"><span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white text-xs font-semibold">3</span><span>Record observations</span></a></li>
+          </ol>
+          <p className="mt-2 px-3 text-xs leading-5 text-neutral-500">Use these links to move between stages. You can complete them in any order; this navigation does not change data permissions or submission rules.</p>
+        </nav>
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <section id="create-case" aria-labelledby="create-case-title" className={panel}>
+            <h2 id="create-case-title" className="text-lg font-semibold">1. Create a case</h2>
             <p className="mt-1 text-sm text-neutral-500">Use a study code, not a patient name or hospital number.</p>
             <form className="mt-4 space-y-4" onSubmit={createCase}>
               <label className="block text-sm font-medium">Pseudonymous case code
@@ -347,8 +356,8 @@ export default function DataIntakePage() {
             </form>
           </section>
 
-          <section className={panel}>
-            <h2 className="text-lg font-semibold">2. Upload source files</h2>
+          <section id="upload-files" aria-labelledby="upload-files-title" className={panel}>
+            <h2 id="upload-files-title" className="text-lg font-semibold">2. Upload source files</h2>
             <p className="mt-1 text-sm text-neutral-500">Each file is checked against modality-specific extension and size rules before upload.</p>
             <div className="mt-4">
               <label className="block text-sm font-medium">Target case
@@ -388,9 +397,9 @@ export default function DataIntakePage() {
           </section>
         </div>
 
-        <section className={`${panel} mt-5`}>
+        <section id="record-observation" aria-labelledby="record-observation-title" className={`${panel} mt-5`}>
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><h2 className="text-lg font-semibold">3. Structured clinical observation</h2><p className="mt-1 text-sm text-neutral-500">Record a clinician-entered finding using required fields and a controlled category.</p></div>
+            <div><h2 id="record-observation-title" className="text-lg font-semibold">3. Structured clinical observation</h2><p className="mt-1 text-sm text-neutral-500">Record a clinician-entered finding using required fields and a controlled category.</p></div>
             <span className="rounded-full border border-neutral-200 px-3 py-1 text-xs font-medium text-neutral-600">{selectedCase ? selectedCase.case_code : "No case selected"}</span>
           </div>
           <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={addObservation}>
