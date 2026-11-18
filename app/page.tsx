@@ -8,6 +8,7 @@ const primaryWorkspaces = [
     href: "/projects",
     action: "Manage projects",
     mark: "P",
+    featured: false,
   },
   {
     number: "02",
@@ -25,6 +26,7 @@ const primaryWorkspaces = [
     href: "/datasets",
     action: "View datasets",
     mark: "D",
+    featured: false,
   },
 ];
 
