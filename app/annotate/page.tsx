@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -36,8 +37,6 @@ export default function AnnotatePage() {
   const [notes, setNotes] = useState("");
   const [memberUserId, setMemberUserId] = useState("");
   const [memberRole, setMemberRole] = useState<"researcher" | "reviewer" | "viewer">("researcher");
-  const [reviewDecision, setReviewDecision] = useState<"accepted" | "changes_requested" | "rejected">("accepted");
-  const [reviewNotes, setReviewNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -113,7 +112,6 @@ export default function AnnotatePage() {
   const selectedItem = items.find((item) => item.id === selectedItemId);
   const selectedAsset = assets.find((asset) => asset.id === selectedItem?.clinical_asset_id);
   const canManage = userRole === "owner" || userRole === "principal_investigator";
-  const canReview = canManage || userRole === "reviewer";
   const canAnnotate = userRole === "researcher" && selectedItem?.assigned_to === userId;
   const latestOwnAnnotation = annotations
     .filter((annotation) => annotation.dataset_item_id === selectedItemId && annotation.annotator_id === userId && annotation.status !== "superseded")
@@ -122,9 +120,6 @@ export default function AnnotatePage() {
     .filter((annotation) => annotation.dataset_item_id === selectedItemId && annotation.annotator_id === userId && annotation.status === "draft")
     .sort((a, b) => b.revision - a.revision)[0];
   const annotationForEditing = currentDraft ?? latestOwnAnnotation;
-  const submittedAnnotation = annotations
-    .filter((annotation) => annotation.dataset_item_id === selectedItemId && annotation.status === "submitted")
-    .sort((a, b) => b.revision - a.revision)[0];
   const counts = {
     queued: items.filter((item) => item.status === "queued").length,
     inProgress: items.filter((item) => item.status === "in_progress").length,
@@ -209,21 +204,6 @@ export default function AnnotatePage() {
     await refresh(datasetId);
   }
 
-  async function reviewAnnotation() {
-    if (!supabase || !submittedAnnotation || !canReview || selectedItem?.status !== "submitted") return;
-    setBusy(true); setError(""); setNotice("");
-    const { error: reviewError } = await supabase.rpc("review_dataset_annotation", {
-      p_annotation_id: submittedAnnotation.id,
-      p_decision: reviewDecision,
-      p_review_notes: reviewNotes,
-    });
-    setBusy(false);
-    if (reviewError) { setError("Review could not be recorded. Confirm this is submitted work from another annotator."); return; }
-    setReviewNotes("");
-    setNotice(reviewDecision === "accepted" ? "Annotation accepted and item marked ready for dataset curation." : reviewDecision === "rejected" ? "Annotation rejected." : "Changes requested; the item has returned to the annotator.");
-    await refresh(datasetId);
-  }
-
   const includedIds = new Set(items.map((item) => item.clinical_asset_id));
   const eligibleAssets = canManage
     ? assets.filter((asset) => asset.status === "approved" && !includedIds.has(asset.id))
@@ -234,8 +214,15 @@ export default function AnnotatePage() {
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8">
         <section className="py-8">
           <p className="text-xs font-bold uppercase tracking-[.18em] text-neutral-500">Data operations</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Annotation operations</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-neutral-600">Manage approved dataset items, assign trained project researchers, and independently review submitted annotations.</p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight">Annotation workspace</h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-neutral-600">Prepare annotation tasks, assign researchers, and capture structured labels. Independent review takes place in the Quality Assurance workspace.</p>
+            </div>
+            <Link href="/quality" className={secondary + " shrink-0"}>
+              Open quality assurance <span className="ml-2" aria-hidden="true">→</span>
+            </Link>
+          </div>
         </section>
         {error && <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
         {notice && <div role="status" className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{notice}</div>}
@@ -330,13 +317,13 @@ export default function AnnotatePage() {
                   <label className="block text-sm font-medium">Annotator notes<textarea className={field} rows={3} maxLength={5000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional context; do not include direct identifiers." /></label>
                   {annotationForEditing && <p className="rounded-lg bg-neutral-50 p-3 text-xs text-neutral-600">{currentDraft ? "Draft revision" : "Previous submitted revision"}: {annotationForEditing.revision}. Use this as context when responding to a change request.</p>}
                   <div className="flex flex-wrap gap-2"><button className={button} type="submit" disabled={busy}>{busy ? "Saving…" : "Save draft"}</button><button className={secondary} type="button" disabled={busy} onClick={() => void saveAnnotation(true)}>Submit for independent review</button></div>
-                </form> : canReview && submittedAnnotation && selectedItem.status === "submitted" ? <form className="space-y-4 border-t border-neutral-100 pt-5" onSubmit={(event) => { event.preventDefault(); void reviewAnnotation(); }}>
-                  <div><p className="text-xs font-bold uppercase tracking-wider text-neutral-500">Independent quality assurance</p><h2 className="mt-1 text-lg font-semibold">Review submitted annotation</h2><p className="mt-1 text-sm text-neutral-500">Revision {submittedAnnotation.revision} · annotator {submittedAnnotation.annotator_id.slice(0, 8)}…</p></div>
-                  <div className="rounded-lg bg-neutral-50 p-4"><p className="text-sm font-semibold">{String(submittedAnnotation.labels.label ?? "No primary label")}</p><p className="mt-2 whitespace-pre-wrap text-sm text-neutral-700">{String(submittedAnnotation.labels.finding ?? "")}</p><p className="mt-2 whitespace-pre-wrap text-xs text-neutral-500">{submittedAnnotation.notes}</p></div>
-                  <label className="block text-sm font-medium">Review decision<select className={field} value={reviewDecision} onChange={(event) => setReviewDecision(event.target.value as typeof reviewDecision)}><option value="accepted">Accept</option><option value="changes_requested">Request changes</option><option value="rejected">Reject</option></select></label>
-                  <label className="block text-sm font-medium">Reviewer rationale<textarea className={field} rows={3} maxLength={5000} value={reviewNotes} onChange={(event) => setReviewNotes(event.target.value)} placeholder="Record the basis for the decision." /></label>
-                  <button className={button} type="submit" disabled={busy}>{busy ? "Recording…" : "Record QA decision"}</button>
-                </form> : <div className="border-t border-neutral-100 pt-4"><p className="text-sm font-medium">{canManage ? "Task management view" : userRole === "reviewer" ? "No submitted annotation is awaiting review on this item." : "This item is not assigned to your annotator account."}</p><p className="mt-1 text-xs leading-5 text-neutral-500">Drafts, submissions, and review decisions are governed by project membership and database policies.</p></div>}
+                </form> : selectedItem.status === "submitted" ? <div className="border-t border-neutral-100 pt-5">
+                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+                    <p className="text-sm font-semibold">Submitted for independent review</p>
+                    <p className="mt-1 text-sm leading-5 text-neutral-600">This annotation is awaiting a reviewer decision. Reviewers and project leads should use the dedicated Quality Assurance workspace to inspect the submission and record the outcome.</p>
+                    <Link href="/quality" className="mt-3 inline-flex min-h-10 items-center rounded-lg bg-neutral-900 px-3 py-2 text-xs font-semibold text-white hover:bg-neutral-700">Go to quality assurance <span className="ml-2" aria-hidden="true">→</span></Link>
+                  </div>
+                </div> : <div className="border-t border-neutral-100 pt-4"><p className="text-sm font-medium">{canManage ? "Task management view" : userRole === "reviewer" ? "No submitted annotation is awaiting review on this item." : "This item is not assigned to your annotator account."}</p><p className="mt-1 text-xs leading-5 text-neutral-500">Drafts, submissions, and review decisions are governed by project membership and database policies.</p></div>}
               </div>
             )}
           </section>
