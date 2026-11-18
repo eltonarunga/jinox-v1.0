@@ -116,7 +116,7 @@ The current release RPC creates a hashed, append-only eligibility manifest. It d
 **Acceptance:** Release blocked when governance or quality gates fail; artifacts are reproducible; every release is traceable and audited.
 
 ### JX-016 — Permissioned dataset delivery and export
-**Status:** Pending — architecture documented; implementation blocked on JX-004, JX-005, JX-006 and JX-017 · **Milestone:** M3  
+**Status:** Pending — architecture documented; implementation blocked on JX-004, JX-005, JX-006, JX-013 and JX-017 · **Milestone:** M3  
 Implement customer/partner-scoped exports, delivery formats, access expiry, audit, and withdrawal/retention handling. Do not expose files until byte-level integrity, malware/content validation, de-identification, permitted-use checks and staging authorization are verified.
 
 **Acceptance:** Server-side authorization; scope matches permitted use; delivery events are auditable; revoked/expired access is denied.
