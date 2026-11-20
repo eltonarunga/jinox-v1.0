@@ -4,7 +4,7 @@
 This matrix translates the repository's authorization intent into staging tests. It is a test plan, not evidence that policies or functions currently pass. Use synthetic accounts, projects, cases, assets, and datasets only.
 
 ## Required synthetic identities
-- Global administrator (not an asset uploader)
+- Global administrator. The admin must not upload the ordinary approve/reject/quarantine/concurrency fixtures. A separate admin-owned pending asset is required for the self-review denial test.
 - Project owner / manager
 - Project reviewer
 - Assigned researcher
@@ -12,7 +12,7 @@ This matrix translates the repository's authorization intent into staging tests.
 - User from a separate project
 - Clinical asset owner/uploader
 
-Keep identities distinct when a test depends on separation of duties. A reviewer must not be the annotator for the same annotation, and the administrator reviewing an asset must not be its uploader.
+Keep identities distinct when a test depends on separation of duties. A reviewer must not be the annotator for the same annotation. For asset review, use owner-uploaded assets for normal admin review decisions, and the separate admin-owned asset only to test that an administrator cannot review their own upload.
 
 ## Test matrix
 
@@ -24,7 +24,7 @@ Keep identities distinct when a test depends on separation of duties. A reviewer
 | Clinical case | Owner creates and reads own case | Another user cannot read, alter, or delete it |
 | Asset intake | Owner uploads asset to own open case with consent/waiver | No consent, closed case, wrong owner, or client-set approval state rejected |
 | Storage | Owner accesses own authorized object | Other user and unrelated project access denied |
-| Asset approval | Separate global admin performs one permitted review transition | Uploader cannot review; non-admin cannot decide; repeat decision blocked |
+| Asset approval | Separate global admin reviews an owner-uploaded pending asset | Uploader cannot review; non-admin cannot decide; admin cannot review the admin-owned self-review fixture; repeat decision blocked |
 | Dataset item | Manager adds approved owned asset and valid assignment | Pending/quarantined assets and non-members cannot be added |
 | Assignment | Manager assigns to researcher in project | Cross-project or non-researcher assignment rejected |
 | Annotation | Assigned researcher saves draft and submits | Unassigned user, wrong project, or non-researcher cannot write |
