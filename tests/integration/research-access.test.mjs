@@ -348,6 +348,18 @@ test("curation is role-gated, eligibility-checked and append-only; release manif
   });
   assert.ok(directReviewInsert, "Project managers must not manufacture QA decisions through direct table inserts");
 
+  // Item acceptance is a workflow outcome, not a manager-editable field.
+  // The only authorized acceptance path is the atomic review RPC.
+  const { error: directStatusUpdate } = await owner.from("dataset_items")
+    .update({ status: "rejected" })
+    .eq("id", eligibleItemId);
+  assert.ok(directStatusUpdate, "Project managers must not directly change dataset item workflow status");
+  const { data: itemAfterDirectUpdate, error: itemReadError } = await owner.from("dataset_items")
+    .select("status").eq("id", eligibleItemId).single();
+  assert.equal(itemReadError, null);
+  assert.equal(itemAfterDirectUpdate.status, "accepted",
+    "A denied direct status update must leave the independently reviewed item accepted");
+
   const { data: curation, error: curateError } = await reviewer.rpc("curate_dataset_item", {
     p_dataset_item_id: eligibleItemId,
     p_decision: "include",
