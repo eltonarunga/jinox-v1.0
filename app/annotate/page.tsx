@@ -182,7 +182,7 @@ export default function AnnotatePage() {
     if (!supabase || !canManage) return;
     setBusy(true); setError(""); setNotice("");
     const { error: assignmentError } = await supabase.from("dataset_items")
-      .update({ assigned_to: assigneeId || null, status: "queued" }).eq("id", itemId);
+      .update({ assigned_to: assigneeId || null }).eq("id", itemId);
     setBusy(false);
     if (assignmentError) { setError("Task assignment failed. Select a researcher who is a member of this project."); return; }
     setNotice(assigneeId ? "Task assigned to the selected researcher." : "Task returned to the unassigned queue.");
@@ -300,12 +300,15 @@ export default function AnnotatePage() {
                   <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs">{label(selectedItem.status)}</span>
                 </div>
 
-                {canManage && <label className="block max-w-lg text-sm font-medium">Assign to project researcher
-                  <select className={field} value={selectedItem.assigned_to ?? ""} disabled={busy} onChange={(event) => void assignItem(selectedItem.id, event.target.value)}>
-                    <option value="">Unassigned</option>
-                    {members.filter((member) => member.role === "researcher").map((member) => <option key={member.user_id} value={member.user_id}>{member.user_id}</option>)}
-                  </select>
-                </label>}
+                {canManage && <div className="max-w-lg">
+                  <label className="block text-sm font-medium">Assign to project researcher
+                    <select className={field} value={selectedItem.assigned_to ?? ""} disabled={busy || selectedItem.status !== "queued"} onChange={(event) => void assignItem(selectedItem.id, event.target.value)}>
+                      <option value="">Unassigned</option>
+                      {members.filter((member) => member.role === "researcher").map((member) => <option key={member.user_id} value={member.user_id}>{member.user_id}</option>)}
+                    </select>
+                  </label>
+                  {selectedItem.status !== "queued" && <p className="mt-1 text-xs text-neutral-500">Assignment is locked after work begins. A separately audited reassignment workflow is not yet available.</p>}
+                </div>}
 
                 {signedUrl ? <div className="relative mt-2 h-[520px] overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 p-2"><Image src={signedUrl} alt="Authorized private source asset preview" fill unoptimized sizes="(max-width: 1280px) 100vw, 60vw" className="object-contain" /></div> : <div className="flex min-h-48 items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-neutral-50 p-6 text-center text-sm text-neutral-500">Preview is unavailable for this file type or your role cannot access its private object.</div>}
                 <p className="text-xs text-neutral-500">Signed preview URLs expire after five minutes. The source file remains private.</p>
