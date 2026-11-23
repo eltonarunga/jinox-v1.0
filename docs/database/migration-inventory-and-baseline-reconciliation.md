@@ -153,3 +153,44 @@ No production access, production migration, production data operation or manual 
 - Repository source was inspected on `main`; hosted database schemas and migration-history tables were not queried.
 - No migration was executed or tested locally. Supabase CLI is not available in this workflow.
 - The document does not certify SQL syntax, runtime behavior, policy correctness or production parity.
+
+
+## Source-audit addendum — follow-up review
+
+A second pass inspected the SQL bodies of all 19 timestamped migrations and the unversioned schema snapshot. The following details should be carried into baseline planning.
+
+### A. The two research migrations create duplicate timestamp triggers
+
+The first migration creates per-table triggers named `research_projects_touch_updated_at`, `research_datasets_touch_updated_at`, `research_experiments_touch_updated_at` and `research_consents_touch_updated_at`, using `public.research_touch_updated_at()`.
+
+The second research migration creates another set named `set_research_projects_updated_at`, `set_research_datasets_updated_at`, `set_research_experiments_updated_at` and `set_research_consents_updated_at`, using `public.handle_updated_at()`.
+
+The second migration drops only its own `set_...` trigger names before recreating them. It does not remove the earlier `..._touch_updated_at` triggers. On a sequential run, both BEFORE UPDATE triggers therefore remain attached to each of those four tables and both assign `updated_at`. This is redundant and should be reviewed as a forward-only cleanup candidate after confirming deployed state. Do not edit historical migrations that may already have been applied.
+
+### B. The first research migration's table definitions win in a sequential clean run
+
+Because `20261026_secure_research_mvp.sql` precedes `20261027000000_research_workspace.sql`, the latter's `CREATE TABLE IF NOT EXISTS` statements do not reconcile the already-created tables. The effective table definitions are therefore the first migration's definitions, while later indexes, triggers and policies may still be added.
+
+In addition to the differences already listed above, the first migration creates `research_project_members`; the second migration does not create that table. The first migration also establishes the membership helper functions and a creator-owner membership trigger. Treat the first migration as the effective source for those objects unless an authoritative environment schema proves otherwise.
+
+### C. The schema snapshot is not safely replayable as-is
+
+The unversioned `supabase/schema.sql` uses `CREATE TABLE IF NOT EXISTS` for its tables and `CREATE OR REPLACE FUNCTION` for `handle_updated_at()`, but its three named public-read/anonymous-insert policies are created without preceding `DROP POLICY IF EXISTS` statements. Re-running the snapshot against a database where those policies already exist can fail with duplicate-policy errors. It must not be treated as an idempotent baseline script without review.
+
+The snapshot also includes a public anonymous insert policy on `screenings`. Its intended use, data classification, and compatibility with the current application should be explicitly confirmed as part of canonical-schema review. This is a policy-design question, not a claim about current hosted configuration.
+
+### D. The final migration header understates its changes
+
+The header in `20261125001000_serialize_dataset_release_with_annotation_writes.sql` says it only replaces `create_dataset_release` and does not alter data. The file also replaces `curate_dataset_item` and `review_dataset_annotation`. The header is therefore incomplete. This migration is source-only in this review; no runtime behavior has been tested.
+
+### E. Reconciliation implications
+
+Before baseline adoption, add these explicit checks to the schema comparison:
+
+- Count and identify all timestamp-maintenance triggers on the four research tables; verify whether duplicate trigger pairs exist in any target environment.
+- Compare actual research table definitions to the first migration's definitions, not merely to the later `IF NOT EXISTS` declarations.
+- Compare all policies on the baseline tables, including the `screenings` insert policy, and check for name collisions before any schema snapshot replay.
+- Verify the actual function definitions for `research_touch_updated_at()` and `handle_updated_at()` and their trigger attachments.
+- Review every object replaced by the final serialization migration, not just `create_dataset_release`.
+
+These are source-derived risks and validation requirements. They do not establish the current state of staging or production.
