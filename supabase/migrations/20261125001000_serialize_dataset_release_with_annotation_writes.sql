@@ -155,3 +155,274 @@ $$;
 
 revoke all on function public.create_dataset_release(uuid) from public, anon;
 grant execute on function public.create_dataset_release(uuid) to authenticated;
+
+
+-- Use the same explicit dataset -> item lock order for curation.
+create or replace function public.curate_dataset_item(
+  p_dataset_item_id uuid,
+  p_decision text,
+  p_rationale text default ''
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_item public.dataset_items%rowtype;
+  v_dataset public.research_datasets%rowtype;
+  v_dataset_id uuid;
+  v_asset public.clinical_assets%rowtype;
+  v_case public.clinical_cases%rowtype;
+  v_event public.dataset_item_curation_events%rowtype;
+  v_rationale text := btrim(coalesce(p_rationale, ''));
+begin
+  if v_actor is null then
+    raise exception 'Authentication required' using errcode = '42501';
+  end if;
+  if p_decision is null or p_decision not in ('include', 'exclude', 'remediation_required') then
+    raise exception 'Unsupported curation decision' using errcode = '22023';
+  end if;
+  if char_length(v_rationale) > 5000
+     or (p_decision <> 'include' and char_length(v_rationale) < 3) then
+    raise exception 'A concise rationale is required for exclusion or remediation' using errcode = '22023';
+  end if;
+
+  -- Lock dataset first, then item. Release creation uses the same order.
+  select i.dataset_id into v_dataset_id
+  from public.dataset_items i
+  where i.id = p_dataset_item_id;
+
+  if not found then
+    raise exception 'Dataset item not found' using errcode = 'P0002';
+  end if;
+
+  select d.* into v_dataset
+  from public.research_datasets d
+  where d.id = v_dataset_id
+  for update;
+
+  if not found then
+    raise exception 'Dataset not found' using errcode = 'P0002';
+  end if;
+
+  select i.* into v_item
+  from public.dataset_items i
+  where i.id = p_dataset_item_id
+  for update;
+
+  if not found or v_item.dataset_id is distinct from v_dataset.id then
+    raise exception 'Dataset item changed during curation; retry' using errcode = '40001';
+  end if;
+  if not (
+    public.research_can_manage_project(v_dataset.project_id)
+    or public.research_current_user_has_project_role(v_dataset.project_id, array['reviewer']::text[])
+  ) then
+    raise exception 'Reviewer or project manager access required' using errcode = '42501';
+  end if;
+
+  if p_decision = 'include' then
+    if v_dataset.consent_basis = 'pending_review'
+       or v_dataset.status in ('restricted', 'archived')
+       or (v_dataset.consent_basis = 'public_licensed' and nullif(btrim(v_dataset.license), '') is null) then
+      raise exception 'Dataset rights and status must be resolved before inclusion' using errcode = '22023';
+    end if;
+    if v_item.status <> 'accepted' then
+      raise exception 'Only independently accepted annotation items can be included in this release workflow' using errcode = '22023';
+    end if;
+
+    select a.* into v_asset
+    from public.clinical_assets a
+    where a.id = v_item.clinical_asset_id;
+
+    if not found or v_asset.status <> 'approved' or v_asset.checksum_sha256 is null then
+      raise exception 'The source asset must be approved and have a recorded SHA-256 checksum' using errcode = '22023';
+    end if;
+
+    select c.* into v_case
+    from public.clinical_cases c
+    where c.id = v_asset.case_id;
+
+    if not found or v_case.status <> 'open'
+       or v_case.consent_status not in ('obtained', 'ethics_waiver') then
+      raise exception 'The source case must have current consent or a documented ethics waiver' using errcode = '22023';
+    end if;
+
+    if not exists (
+      select 1
+      from public.dataset_annotations a
+      join lateral (
+        select r.decision
+        from public.annotation_reviews r
+        where r.annotation_id = a.id
+        order by r.created_at desc, r.id desc
+        limit 1
+      ) latest_review on latest_review.decision = 'accepted'
+      where a.dataset_item_id = v_item.id
+        and a.annotator_id = v_item.assigned_to
+        and a.status = 'submitted'
+        and not exists (
+          select 1
+          from public.dataset_annotations newer
+          where newer.dataset_item_id = a.dataset_item_id
+            and newer.annotator_id = a.annotator_id
+            and newer.revision > a.revision
+        )
+    ) then
+      raise exception 'An independently accepted annotation is required' using errcode = '22023';
+    end if;
+  end if;
+
+  insert into public.dataset_item_curation_events (
+    dataset_item_id, curator_id, decision, rationale
+  ) values (
+    p_dataset_item_id, v_actor, p_decision, v_rationale
+  )
+  returning * into v_event;
+
+  insert into public.research_audit_logs (
+    project_id, actor_id, action, resource_type, resource_id, details
+  ) values (
+    v_dataset.project_id, v_actor, 'dataset_item.curated', 'dataset_item', v_item.id::text,
+    jsonb_build_object('decision', p_decision, 'curation_event_id', v_event.id)
+  );
+
+  return jsonb_build_object(
+    'id', v_event.id,
+    'dataset_item_id', v_event.dataset_item_id,
+    'decision', v_event.decision,
+    'rationale', v_event.rationale,
+    'created_at', v_event.created_at
+  );
+end;
+$$;
+
+revoke all on function public.curate_dataset_item(uuid, text, text) from public, anon;
+grant execute on function public.curate_dataset_item(uuid, text, text) to authenticated;
+
+-- Seal an immutable metadata manifest from the latest included, accepted,
+-- consent-eligible items. No filenames, storage paths, case codes, labels,
+-- clinical notes, or signed URLs are copied into the manifest.
+-- Enforce current annotation revision eligibility at review and release boundaries.
+-- Source-only migration proposal: validate on synthetic staging fixtures before applying.
+-- Lock order is dataset_item -> dataset_annotation, matching save_dataset_annotation.
+
+create or replace function public.review_dataset_annotation(
+  p_annotation_id uuid,
+  p_decision text,
+  p_review_notes text default ''
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_actor uuid := (select auth.uid());
+  v_annotation public.dataset_annotations%rowtype;
+  v_item public.dataset_items%rowtype;
+  v_project_id uuid;
+  v_review public.annotation_reviews%rowtype;
+  v_next_item_status text;
+begin
+  if v_actor is null then
+    raise exception 'Authentication required' using errcode = '42501';
+  end if;
+  if p_decision is null or p_decision not in ('accepted', 'changes_requested', 'rejected') then
+    raise exception 'Unsupported review decision' using errcode = '22023';
+  end if;
+  if char_length(coalesce(p_review_notes, '')) > 5000 then
+    raise exception 'Review notes exceed 5000 characters' using errcode = '22023';
+  end if;
+
+  -- Read the item id first, then lock item before annotation to use the same
+  -- lock order as save_dataset_annotation and avoid an opposing lock cycle.
+  select i.* into v_item
+  from public.dataset_items i
+  join public.dataset_annotations a on a.dataset_item_id = i.id
+  where a.id = p_annotation_id;
+
+  if not found then
+    raise exception 'Annotation not found' using errcode = 'P0002';
+  end if;
+
+  select i.* into v_item
+  from public.dataset_items i
+  where i.id = v_item.id
+  for update;
+
+  select a.* into v_annotation
+  from public.dataset_annotations a
+  where a.id = p_annotation_id
+    and a.dataset_item_id = v_item.id
+  for update;
+
+  if not found then
+    raise exception 'Annotation not found' using errcode = 'P0002';
+  end if;
+
+  select d.project_id into v_project_id
+  from public.research_datasets d
+  where d.id = v_item.dataset_id;
+
+  if v_annotation.status <> 'submitted' or v_item.status <> 'submitted' then
+    raise exception 'Only submitted annotations can be reviewed' using errcode = '22023';
+  end if;
+
+  if v_annotation.annotator_id is distinct from v_item.assigned_to then
+    raise exception 'Only the current assigned researcher annotation can be reviewed' using errcode = '22023';
+  end if;
+
+  if exists (
+    select 1
+    from public.dataset_annotations newer
+    where newer.dataset_item_id = v_annotation.dataset_item_id
+      and newer.annotator_id = v_annotation.annotator_id
+      and newer.revision > v_annotation.revision
+  ) then
+    raise exception 'Only the current annotation revision can be reviewed' using errcode = '22023';
+  end if;
+
+  if v_annotation.annotator_id = v_actor then
+    raise exception 'An annotator cannot review their own work' using errcode = '42501';
+  end if;
+  if not (
+    public.research_can_manage_project(v_project_id)
+    or public.research_current_user_has_project_role(v_project_id, array['reviewer']::text[])
+  ) then
+    raise exception 'Reviewer or project manager access required' using errcode = '42501';
+  end if;
+
+  insert into public.annotation_reviews (
+    annotation_id, reviewer_id, decision, review_notes
+  ) values (
+    p_annotation_id, v_actor, p_decision, coalesce(p_review_notes, '')
+  )
+  returning * into v_review;
+
+  v_next_item_status := case p_decision
+    when 'accepted' then 'accepted'
+    when 'rejected' then 'rejected'
+    else 'in_progress'
+  end;
+
+  update public.dataset_items
+  set status = v_next_item_status
+  where id = v_item.id;
+
+  return jsonb_build_object(
+    'review_id', v_review.id,
+    'annotation_id', v_review.annotation_id,
+    'decision', v_review.decision,
+    'item_status', v_next_item_status,
+    'created_at', v_review.created_at
+  );
+end;
+$$;
+
+revoke all on function public.review_dataset_annotation(uuid, text, text) from public, anon;
+grant execute on function public.review_dataset_annotation(uuid, text, text) to authenticated;
+
+-- Replace release creation so only the latest revision for its annotator can
+-- qualify, and that exact revision must have a latest accepted review.
