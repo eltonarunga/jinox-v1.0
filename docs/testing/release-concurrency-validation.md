@@ -8,7 +8,7 @@ Expected outcomes:
 
 - If a save or review obtains an item lock first, release creation waits; its later manifest query sees the committed workflow state.
 - If release creation obtains the item lock first, the save or review waits; the release records the state that existed before that later write.
-- Dataset-level curation and release creation retain the existing dataset-first lock order.
+- Curation and release both use dataset -> item lock ordering. Annotation save and review use item -> annotation ordering.
 
 The trade-off is that release creation briefly locks all items in the dataset, including items that will not be included. This favors correctness over maximum write concurrency during the relatively infrequent release operation.
 
