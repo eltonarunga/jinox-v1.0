@@ -425,3 +425,23 @@ test("curation is role-gated, eligibility-checked and append-only; release manif
     .delete().eq("id", curation.id);
   assert.ok(curationDelete, "Curation history must not be deletable by authenticated clients");
 });
+
+// Optional strict mode for the dedicated staging workflow. Ordinary PR CI may skip
+// integration tests when staging fixtures are unavailable; strict staging must not.
+if (env.JINOX_REQUIRE_STAGING_TESTS === "1") {
+  const strictRequired = [
+    ...baseRequired,
+    "JINOX_TEST_ASSIGNED_ITEM_ID",
+    "JINOX_TEST_ASSIGNED_ASSET_ID",
+    "JINOX_TEST_PENDING_ASSET_ID",
+    ...annotationVars,
+    ...reviewVars,
+    ...curationVars,
+  ];
+  const missingStrict = [...new Set(strictRequired)].filter((key) => !env[key]);
+  if (missingStrict.length) {
+    throw new Error(
+      `Strict staging integration mode requires all fixtures. Missing: ${missingStrict.join(", ")}`,
+    );
+  }
+}
