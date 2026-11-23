@@ -1,12 +1,10 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { createBrowserClient } from "@supabase/ssr";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Profile = { id: string; email: string | null; display_name: string; institution: string; country: string; role: "member" | "researcher" | "clinician" | "admin" };
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = url && key ? createBrowserClient(url, key) : null;
+const supabase = getSupabaseBrowserClient();
 const inputClass = "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-black focus:ring-4 focus:ring-slate-900/10";
 
 export default function ProfilePage() {
