@@ -1,0 +1,60 @@
+name: Staging Authorization Integration Tests
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  staging-authorization:
+    name: Strict staging authorization tests
+    runs-on: ubuntu-latest
+    environment: jinox-staging
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Require staging fixtures and run authorization tests
+        env:
+          JINOX_REQUIRE_STAGING_TESTS: "1"
+          JINOX_TEST_SUPABASE_URL: ${{ secrets.JINOX_TEST_SUPABASE_URL }}
+          JINOX_TEST_SUPABASE_ANON_KEY: ${{ secrets.JINOX_TEST_SUPABASE_ANON_KEY }}
+          JINOX_TEST_PROJECT_ID: ${{ secrets.JINOX_TEST_PROJECT_ID }}
+          JINOX_TEST_DATASET_ID: ${{ secrets.JINOX_TEST_DATASET_ID }}
+          JINOX_TEST_OWNER_TOKEN: ${{ secrets.JINOX_TEST_OWNER_TOKEN }}
+          JINOX_TEST_RESEARCHER_TOKEN: ${{ secrets.JINOX_TEST_RESEARCHER_TOKEN }}
+          JINOX_TEST_REVIEWER_TOKEN: ${{ secrets.JINOX_TEST_REVIEWER_TOKEN }}
+          JINOX_TEST_VIEWER_TOKEN: ${{ secrets.JINOX_TEST_VIEWER_TOKEN }}
+          JINOX_TEST_UNRELATED_TOKEN: ${{ secrets.JINOX_TEST_UNRELATED_TOKEN }}
+          JINOX_TEST_ASSIGNED_ITEM_ID: ${{ secrets.JINOX_TEST_ASSIGNED_ITEM_ID }}
+          JINOX_TEST_ASSIGNED_ASSET_ID: ${{ secrets.JINOX_TEST_ASSIGNED_ASSET_ID }}
+          JINOX_TEST_PENDING_ASSET_ID: ${{ secrets.JINOX_TEST_PENDING_ASSET_ID }}
+          JINOX_TEST_SUBMITTED_ANNOTATION_ID: ${{ secrets.JINOX_TEST_SUBMITTED_ANNOTATION_ID }}
+          JINOX_TEST_DRAFT_ANNOTATION_ID: ${{ secrets.JINOX_TEST_DRAFT_ANNOTATION_ID }}
+          JINOX_TEST_ASSET_REVIEW_ADMIN_TOKEN: ${{ secrets.JINOX_TEST_ASSET_REVIEW_ADMIN_TOKEN }}
+          JINOX_TEST_ASSET_REVIEW_NON_ADMIN_TOKEN: ${{ secrets.JINOX_TEST_ASSET_REVIEW_NON_ADMIN_TOKEN }}
+          JINOX_TEST_ASSET_REVIEW_OWNER_TOKEN: ${{ secrets.JINOX_TEST_ASSET_REVIEW_OWNER_TOKEN }}
+          JINOX_TEST_ASSET_REVIEW_ADMIN_SELF_OWNED_ID: ${{ secrets.JINOX_TEST_ASSET_REVIEW_ADMIN_SELF_OWNED_ID }}
+          JINOX_TEST_ASSET_REVIEW_APPROVE_ID: ${{ secrets.JINOX_TEST_ASSET_REVIEW_APPROVE_ID }}
+          JINOX_TEST_ASSET_REVIEW_REJECT_ID: ${{ secrets.JINOX_TEST_ASSET_REVIEW_REJECT_ID }}
+          JINOX_TEST_ASSET_REVIEW_QUARANTINE_ID: ${{ secrets.JINOX_TEST_ASSET_REVIEW_QUARANTINE_ID }}
+          JINOX_TEST_ASSET_REVIEW_CONCURRENT_ID: ${{ secrets.JINOX_TEST_ASSET_REVIEW_CONCURRENT_ID }}
+          JINOX_TEST_CURATION_DATASET_ID: ${{ secrets.JINOX_TEST_CURATION_DATASET_ID }}
+          JINOX_TEST_CURATION_ELIGIBLE_ITEM_ID: ${{ secrets.JINOX_TEST_CURATION_ELIGIBLE_ITEM_ID }}
+          JINOX_TEST_CURATION_INELIGIBLE_ITEM_ID: ${{ secrets.JINOX_TEST_CURATION_INELIGIBLE_ITEM_ID }}
+          JINOX_TEST_CURATION_OWNER_TOKEN: ${{ secrets.JINOX_TEST_CURATION_OWNER_TOKEN }}
+          JINOX_TEST_CURATION_REVIEWER_TOKEN: ${{ secrets.JINOX_TEST_CURATION_REVIEWER_TOKEN }}
+          JINOX_TEST_CURATION_RESEARCHER_TOKEN: ${{ secrets.JINOX_TEST_CURATION_RESEARCHER_TOKEN }}
+          JINOX_TEST_CURATION_UNRELATED_TOKEN: ${{ secrets.JINOX_TEST_CURATION_UNRELATED_TOKEN }}
+        run: npm run test:integration
