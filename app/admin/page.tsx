@@ -1,15 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { createBrowserClient } from "@supabase/ssr";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
 type Role = "member" | "researcher" | "clinician" | "admin";
 type Profile = { id: string; email: string | null; display_name: string; institution: string; country: string; role: Role; created_at: string };
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = url && key ? createBrowserClient(url, key) : null;
+const supabase = getSupabaseBrowserClient();
 
 export default function AdminDashboardPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);

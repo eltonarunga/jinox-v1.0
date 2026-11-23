@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import type { County, DatasetSummaryData, ScreeningRecord } from "./types";
+import type { County, DatasetSummaryData } from "./types";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
@@ -88,34 +88,4 @@ export async function fetchDatasetSummaryFromDb(): Promise<DatasetSummaryData | 
     license: data.license || "Unspecified",
     last_ingestion: data.captured_at,
   };
-}
-
-/**
- * Persist an anonymized screening event into Supabase.
- */
-export async function recordScreeningEvent(screening: ScreeningRecord): Promise<boolean> {
-  // Anonymous screening telemetry is explicitly allowed by the screenings RLS policy.
-  // Keep this public endpoint on the anon client; never bypass RLS with a service-role key.
-  if (!supabase) return false;
-
-  try {
-    const { error } = await supabase.from("screenings").insert({
-      patient_age: screening.patient_age,
-      imaging_signal: screening.imaging_signal,
-      environmental_signal: screening.environmental_signal,
-      genetic_signal: screening.genetic_signal,
-      fused_fluorosis_risk: screening.fused_fluorosis_risk,
-      risk_tier: screening.risk_tier,
-      referred_for_review: screening.referred_for_review,
-    });
-
-    if (error) {
-      console.warn("Non-fatal: could not log screening to Supabase:", error.message);
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.warn("Non-fatal: exception logging screening to Supabase:", err);
-    return false;
-  }
 }
