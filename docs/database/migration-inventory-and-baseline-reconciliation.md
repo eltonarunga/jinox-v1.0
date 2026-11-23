@@ -153,3 +153,41 @@ No production access, production migration, production data operation or manual 
 - Repository source was inspected on `main`; hosted database schemas and migration-history tables were not queried.
 - No migration was executed or tested locally. Supabase CLI is not available in this workflow.
 - The document does not certify SQL syntax, runtime behavior, policy correctness or production parity.
+
+
+## Detailed source comparison: first two research migrations
+
+A second pass over the complete SQL bodies confirms that the overlap is more consequential than repeated table names alone.
+
+### Table-definition differences
+
+| Object | First migration: `20261026_secure_research_mvp.sql` | Second migration: `20261027000000_research_workspace.sql` | Consequence if applied in filename order |
+|---|---|---|---|
+| `research_projects` | Status allows `draft/active/paused/archived`; owner FK uses `ON DELETE RESTRICT`; name/description checks trim or bound content. | Status allows only `active/archived`; owner FK uses `ON DELETE CASCADE`; name check does not trim. | The first definition remains; the second `IF NOT EXISTS` does not narrow status values or change FK behavior. |
+| `research_datasets` | Includes `storage_uri` and `data_dictionary_uri`; status includes `under_review/approved`; consent basis is required; private-URL check on `storage_uri`. | Omits both URI columns; status includes `available`; consent basis defaults to `pending_review`; license and model-version fields have additional length checks. | The first table shape remains. Later code expecting columns only in the second declaration may not find them; the reverse applies to columns only in the first declaration. |
+| `research_experiments` | `model_version` is unrestricted text. | `model_version` is nullable text capped at 160 characters. | The first constraint set remains. |
+| `research_consents` | Adds unique `(project_id, participant_code)` and requires `consented_at` when status is granted. | No matching uniqueness or granted-timestamp check in this declaration; adds length check for `consent_version`. | The first constraints remain; the later length check is not introduced by `IF NOT EXISTS`. |
+| `research_audit_logs` | Bigint identity primary key; nullable project and actor references with `ON DELETE SET NULL`; `resource_id text`. | UUID primary key; project and actor are non-null with `ON DELETE CASCADE`; `resource_id uuid`. | The first key and column types/nullability remain. This is a material schema-contract difference for audit consumers and future migrations. |
+| `research_project_members` | Created in the first migration with project/user composite primary key and role check. | Not declared in the second migration. | It is not a duplicate table declaration; it is already present before the later membership migration. |
+
+The table outcomes above follow PostgreSQL's `CREATE TABLE IF NOT EXISTS` behavior: it skips creation when a relation of that name already exists; it does not compare or merge definitions.
+
+### Policy and helper-function overlap
+
+The first migration creates policies such as `research_projects_read_member`, `research_projects_update_manager`, `research_datasets_read_member`, `research_experiments_read_member`, and the consent/audit policies. The second migration creates differently named `owners manage ...` policies on several of the same tables. It does not first remove all the earlier policy names.
+
+The later assignment-access migration drops its own policy names (for example, `project members can read projects`) but does not explicitly remove the original `research_* ` policies from the first migration.
+
+PostgreSQL permissive RLS policies are combined with OR semantics for a command. Therefore, multiple surviving permissive policies can grant the union of their allowed rows/actions. A reviewer must evaluate the complete effective policy set, not only the most recently added policy. The exact effective permissions still depend on each policy's command, role, USING and WITH CHECK expressions and table grants.
+
+The first migration also creates `research_is_member(uuid)` and `research_can_manage(uuid)`; later migrations introduce differently named project-role helpers. The earlier helpers and policies are not automatically superseded merely because newer helpers exist.
+
+### Required resolution before baseline adoption
+
+1. Select the canonical definitions for all six objects above, including the intended project deletion behavior, dataset status vocabulary, consent constraints and audit-log key/resource types.
+2. Decide whether legacy membership policies are intended to remain. If not, prepare explicit forward-only policy cleanup after analyzing the effective RLS matrix for owner, principal investigator, researcher, reviewer, viewer and unrelated authenticated users.
+3. Inspect all application queries, generated TypeScript database types (if any), RPCs and downstream audit consumers for assumptions about `research_audit_logs.id`, `resource_id`, nullability and dataset URI columns.
+4. Design an explicit reconciliation migration that alters existing tables and removes/replaces obsolete policies safely. Do not edit historical migrations that may already be recorded as applied.
+5. Validate the reconciliation on a disposable, empty staging clone using synthetic users and role-specific RLS tests before any real staging adoption is considered.
+
+This comparison is based on repository SQL text only. It does not establish which definitions exist in staging or production, whether the migrations were applied, or whether the policies are currently active in either hosted environment.
