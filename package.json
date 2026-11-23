@@ -10,7 +10,8 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test:unit": "node --experimental-strip-types --test tests/unit/dataset-validation.test.mjs tests/unit/project-validation.test.mjs tests/unit/read-json.test.mjs tests/unit/safe-redirect.test.mjs tests/unit/public-supabase-config.test.mjs",
-    "test:integration": "node --experimental-strip-types --test tests/integration/research-access.test.mjs"
+    "test:integration": "node --experimental-strip-types --test tests/integration/research-access.test.mjs tests/integration/annotation-workflow.test.mjs",
+    "test:annotation-workflow": "node --experimental-strip-types --test tests/integration/annotation-workflow.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
