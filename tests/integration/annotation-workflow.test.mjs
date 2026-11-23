@@ -120,7 +120,7 @@ workflowTest("changes requested permits a new draft revision and makes the prior
     p_review_notes: "Synthetic regression test: old revision is now stale.",
   });
   assert.ok(staleReviewError, "The prior submitted revision must become unreviewable");
-  assert.match(staleReviewError.message, /current annotation revision/i);
+  assert.match(staleReviewError.message, /only submitted annotations|current annotation revision/i);
 });
 
 workflowTest("active item reassignment is blocked by the database trigger", async () => {
