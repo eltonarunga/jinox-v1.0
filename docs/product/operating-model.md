@@ -16,10 +16,9 @@ The initial domain specialization is oral and craniofacial health, with an East 
 
 JinoX is not primarily a clinical app, a research dashboard, or a digital-twin product. Its primary value is the operational infrastructure and expert workflows required to produce high-quality data for AI development.
 
-
 ## 1A. Lead positioning and relationship to the research proposal
 
-JinoX's current product and commercial lead story is an **AI data operations platform and managed data services business**, initially focused on oral and craniofacial health. The core customer value is governed collection, curation, annotation, independent quality workflows, and reproducible dataset packaging and delivery. Model preparation, training, and evaluation are downstream services or extensions, not prerequisites for describing the data-operations product.
+JinoX's current product and commercial lead story is an **AI data operations platform and managed data services business**, initially focused on oral and craniofacial health. The product is being developed around governed collection and curation, annotation workflows, independent quality assurance, and reproducible dataset packaging and delivery. In the current repository, curation decisions/history and release metadata manifests are implemented in source; complete independent QA operations and customer-ready file/label export and delivery remain incomplete. Model preparation, training, and evaluation are downstream services or extensions, not prerequisites for describing the data-operations product.
 
 The broader foundational-model, digital-twin, genomics, climate-health, and low-resource diagnostic ambitions described in the Google.org AI for Science proposal are a **research programme direction**, not the current product capability or a claim of implementation. They depend on lawful data access, completed governance controls, research partnerships, scientific feasibility, and separate validation. External materials should preserve this distinction: the operating platform is the near-term product; the research programme describes possible future applications of the data foundation.
 
