@@ -22,10 +22,10 @@ The core product is the data operations workflow. Clinical tools, environmental 
 | --- | --- | --- |
 | Organizations and projects | Customer/project setup, team, scope, governance | Project metadata and membership foundations exist; full customer onboarding and commercial operations are incomplete |
 | Data collection | Secure upload/import, structured capture, provenance, collection progress | Case, asset, and structured intake foundations exist; production-grade collection operations and file inspection remain incomplete |
-| Dataset management | Inventory, curation, lifecycle, versioning, delivery | Dataset metadata and item structures exist; immutable releases and controlled delivery remain incomplete |
+| Dataset management | Inventory, curation, lifecycle, versioning, delivery | Dataset metadata/items, curation decisions, and immutable eligibility metadata manifests with SHA-256 are implemented in source; full file/label export and controlled delivery remain incomplete |
 | Annotation operations | Task design, assignment, guidelines, annotation workspaces | Annotation records/revisions and some access foundations exist; full workforce-scale task orchestration is incomplete |
-| Quality assurance | Independent review, sampling, adjudication, agreement | Some review/access foundations exist; end-to-end QA and adjudication are incomplete |
-| Dataset delivery | Manifests, quality reports, export and access control | Governance principles exist; reproducible controlled delivery remains to be implemented |
+| Quality assurance | Independent review, sampling, adjudication, agreement | Review RPC, access restrictions, and QA foundations exist; complete independent QA operations, reviewer assignment, disagreement handling, adjudication, sampling, and quality analytics remain incomplete |
+| Dataset delivery | Manifests, quality reports, export and access control | Immutable metadata eligibility manifests and checksums exist; reproducible dataset packaging, file/label export, and controlled delivery remain to be implemented |
 | Model development | Dataset splits, training, experiment tracking, evaluation | Current training page is preparation-only; no training execution engine, model registry, or validated serving pipeline is connected |
 | Workforce operations | Annotator qualification, workload, performance and compensation | Not implemented as a complete workforce-management system |
 | Administration and governance | Identity, permissions, audit, privacy, retention | Partial application and database foundations exist; production readiness requires verification |
