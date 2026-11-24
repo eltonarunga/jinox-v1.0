@@ -1,5 +1,8 @@
 # JinoX AI
 
+> **Prototype data restriction:** Do not upload real patient data, identifiable clinical records, radiographs, scans, genomic data, or other sensitive health information. File inspection, malware scanning, and robust de-identification are not complete. Use synthetic data only until these controls and project-specific governance are verified.
+
+
 **JinoX AI is an AI data operations platform and managed data services business, focused initially on oral and craniofacial health.** Its operating model is inspired by data-centric AI companies: help customers and research teams collect, curate, annotate, quality-check, package, and ultimately use high-quality datasets to develop and evaluate AI models.
 
 JinoX's differentiation is its oral-health domain focus, East African research context, specialist human-in-the-loop workflows, and responsible handling of sensitive health data.
