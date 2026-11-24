@@ -155,39 +155,42 @@ No production access, production migration, production data operation or manual 
 - The document does not certify SQL syntax, runtime behavior, policy correctness or production parity.
 
 
-## Detailed source comparison: first two research migrations
+## Source-audit addendum — follow-up review
 
-A second pass over the complete SQL bodies confirms that the overlap is more consequential than repeated table names alone.
+A second pass inspected the SQL bodies of all 19 timestamped migrations and the unversioned schema snapshot. The following details should be carried into baseline planning.
 
-### Table-definition differences
+### A. The two research migrations create duplicate timestamp triggers
 
-| Object | First migration: `20261026_secure_research_mvp.sql` | Second migration: `20261027000000_research_workspace.sql` | Consequence if applied in filename order |
-|---|---|---|---|
-| `research_projects` | Status allows `draft/active/paused/archived`; owner FK uses `ON DELETE RESTRICT`; name/description checks trim or bound content. | Status allows only `active/archived`; owner FK uses `ON DELETE CASCADE`; name check does not trim. | The first definition remains; the second `IF NOT EXISTS` does not narrow status values or change FK behavior. |
-| `research_datasets` | Includes `storage_uri` and `data_dictionary_uri`; status includes `under_review/approved`; consent basis is required; private-URL check on `storage_uri`. | Omits both URI columns; status includes `available`; consent basis defaults to `pending_review`; license and model-version fields have additional length checks. | The first table shape remains. Later code expecting columns only in the second declaration may not find them; the reverse applies to columns only in the first declaration. |
-| `research_experiments` | `model_version` is unrestricted text. | `model_version` is nullable text capped at 160 characters. | The first constraint set remains. |
-| `research_consents` | Adds unique `(project_id, participant_code)` and requires `consented_at` when status is granted. | No matching uniqueness or granted-timestamp check in this declaration; adds length check for `consent_version`. | The first constraints remain; the later length check is not introduced by `IF NOT EXISTS`. |
-| `research_audit_logs` | Bigint identity primary key; nullable project and actor references with `ON DELETE SET NULL`; `resource_id text`. | UUID primary key; project and actor are non-null with `ON DELETE CASCADE`; `resource_id uuid`. | The first key and column types/nullability remain. This is a material schema-contract difference for audit consumers and future migrations. |
-| `research_project_members` | Created in the first migration with project/user composite primary key and role check. | Not declared in the second migration. | It is not a duplicate table declaration; it is already present before the later membership migration. |
+The first migration creates per-table triggers named `research_projects_touch_updated_at`, `research_datasets_touch_updated_at`, `research_experiments_touch_updated_at` and `research_consents_touch_updated_at`, using `public.research_touch_updated_at()`.
 
-The table outcomes above follow PostgreSQL's `CREATE TABLE IF NOT EXISTS` behavior: it skips creation when a relation of that name already exists; it does not compare or merge definitions.
+The second research migration creates another set named `set_research_projects_updated_at`, `set_research_datasets_updated_at`, `set_research_experiments_updated_at` and `set_research_consents_updated_at`, using `public.handle_updated_at()`.
 
-### Policy and helper-function overlap
+The second migration drops only its own `set_...` trigger names before recreating them. It does not remove the earlier `..._touch_updated_at` triggers. On a sequential run, both BEFORE UPDATE triggers therefore remain attached to each of those four tables and both assign `updated_at`. This is redundant and should be reviewed as a forward-only cleanup candidate after confirming deployed state. Do not edit historical migrations that may already have been applied.
 
-The first migration creates policies such as `research_projects_read_member`, `research_projects_update_manager`, `research_datasets_read_member`, `research_experiments_read_member`, and the consent/audit policies. The second migration creates differently named `owners manage ...` policies on several of the same tables. It does not first remove all the earlier policy names.
+### B. The first research migration's table definitions win in a sequential clean run
 
-The later assignment-access migration drops its own policy names (for example, `project members can read projects`) but does not explicitly remove the original `research_* ` policies from the first migration.
+Because `20261026_secure_research_mvp.sql` precedes `20261027000000_research_workspace.sql`, the latter's `CREATE TABLE IF NOT EXISTS` statements do not reconcile the already-created tables. The effective table definitions are therefore the first migration's definitions, while later indexes, triggers and policies may still be added.
 
-PostgreSQL permissive RLS policies are combined with OR semantics for a command. Therefore, multiple surviving permissive policies can grant the union of their allowed rows/actions. A reviewer must evaluate the complete effective policy set, not only the most recently added policy. The exact effective permissions still depend on each policy's command, role, USING and WITH CHECK expressions and table grants.
+In addition to the differences already listed above, the first migration creates `research_project_members`; the second migration does not create that table. The first migration also establishes the membership helper functions and a creator-owner membership trigger. Treat the first migration as the effective source for those objects unless an authoritative environment schema proves otherwise.
 
-The first migration also creates `research_is_member(uuid)` and `research_can_manage(uuid)`; later migrations introduce differently named project-role helpers. The earlier helpers and policies are not automatically superseded merely because newer helpers exist.
+### C. The schema snapshot is not safely replayable as-is
 
-### Required resolution before baseline adoption
+The unversioned `supabase/schema.sql` uses `CREATE TABLE IF NOT EXISTS` for its tables and `CREATE OR REPLACE FUNCTION` for `handle_updated_at()`, but its three named public-read/anonymous-insert policies are created without preceding `DROP POLICY IF EXISTS` statements. Re-running the snapshot against a database where those policies already exist can fail with duplicate-policy errors. It must not be treated as an idempotent baseline script without review.
 
-1. Select the canonical definitions for all six objects above, including the intended project deletion behavior, dataset status vocabulary, consent constraints and audit-log key/resource types.
-2. Decide whether legacy membership policies are intended to remain. If not, prepare explicit forward-only policy cleanup after analyzing the effective RLS matrix for owner, principal investigator, researcher, reviewer, viewer and unrelated authenticated users.
-3. Inspect all application queries, generated TypeScript database types (if any), RPCs and downstream audit consumers for assumptions about `research_audit_logs.id`, `resource_id`, nullability and dataset URI columns.
-4. Design an explicit reconciliation migration that alters existing tables and removes/replaces obsolete policies safely. Do not edit historical migrations that may already be recorded as applied.
-5. Validate the reconciliation on a disposable, empty staging clone using synthetic users and role-specific RLS tests before any real staging adoption is considered.
+The snapshot also includes a public anonymous insert policy on `screenings`. Its intended use, data classification, and compatibility with the current application should be explicitly confirmed as part of canonical-schema review. This is a policy-design question, not a claim about current hosted configuration.
 
-This comparison is based on repository SQL text only. It does not establish which definitions exist in staging or production, whether the migrations were applied, or whether the policies are currently active in either hosted environment.
+### D. The final migration header understates its changes
+
+The header in `20261125001000_serialize_dataset_release_with_annotation_writes.sql` says it only replaces `create_dataset_release` and does not alter data. The file also replaces `curate_dataset_item` and `review_dataset_annotation`. The header is therefore incomplete. This migration is source-only in this review; no runtime behavior has been tested.
+
+### E. Reconciliation implications
+
+Before baseline adoption, add these explicit checks to the schema comparison:
+
+- Count and identify all timestamp-maintenance triggers on the four research tables; verify whether duplicate trigger pairs exist in any target environment.
+- Compare actual research table definitions to the first migration's definitions, not merely to the later `IF NOT EXISTS` declarations.
+- Compare all policies on the baseline tables, including the `screenings` insert policy, and check for name collisions before any schema snapshot replay.
+- Verify the actual function definitions for `research_touch_updated_at()` and `handle_updated_at()` and their trigger attachments.
+- Review every object replaced by the final serialization migration, not just `create_dataset_release`.
+
+These are source-derived risks and validation requirements. They do not establish the current state of staging or production.
